@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AETHER-909 // AI Autonomous Hardware &amp; Virtual MIDI Synthesizer Studio</title>
+  <meta name="description" content="Infinite AI-driven multi-instrument MIDI sequencer and analog synthesizer studio for TR-808/909 drums, TB-303 acid, Moog sub bass, Prophet-5 lead, Juno/CS-80 poly pads, Ableton Live 12, Arturia V Collection, and physical hardware synthesizers." />
+  <link rel="stylesheet" href="/index.css" />
+</head>
+<body>
+  <div class="studio-shell">
+    <!-- ====================================================================
+         1. TOP HARDWARE TRANSPORT & AI INFINITE SONG CONDUCTOR CONSOLE
+         ==================================================================== -->
+    <header class="master-header">
+      <div class="brand-plate">
+        <div class="brand-screw" aria-hidden="true"></div>
+        <div>
+          <h1 class="brand-title">
+            AETHER-909 <span class="brand-badge">COREMIDI + DSP</span>
+          </h1>
+          <div class="brand-sub">AI Autonomous Multi-Synth Sequencer // Digital &amp; Hardware Rig</div>
+        </div>
+      </div>
+
+      <!-- Master Transport & OLED Clock Readout -->
+      <div class="transport-cluster">
+        <button id="btn-play-toggle" type="button" class="hw-btn btn-play">
+          <span>▶</span> RUN INFINITE SONG
+        </button>
+
+        <div class="oled-readout">
+          <div class="oled-field">
+            <span class="oled-label">BAR.STEP</span>
+            <span id="readout-bar-step" class="oled-value">01.01</span>
+          </div>
+          <div class="oled-field">
+            <span class="oled-label">BPM</span>
+            <input id="input-bpm" type="number" min="60" max="200" value="130" class="oled-input-num" aria-label="Tempo BPM" />
+          </div>
+          <div class="oled-field">
+            <span class="oled-label">KEY</span>
+            <select id="select-root" class="oled-select" aria-label="Root Note">
+              <option value="C">C</option>
+              <option value="C#">C#</option>
+              <option value="D">D</option>
+              <option value="D#">D#</option>
+              <option value="E">E</option>
+              <option value="F" selected>F</option>
+              <option value="F#">F#</option>
+              <option value="G">G</option>
+              <option value="G#">G#</option>
+              <option value="A">A</option>
+              <option value="A#">A#</option>
+              <option value="B">B</option>
+            </select>
+          </div>
+          <div class="oled-field">
+            <span class="oled-label">SCALE</span>
+            <select id="select-scale" class="oled-select" aria-label="Musical Scale">
+              <option value="dorian" selected>Dorian</option>
+              <option value="minor">Aeolian Minor</option>
+              <option value="phrygian">Phrygian Acid</option>
+              <option value="harmonicMinor">Harmonic Min</option>
+              <option value="mixolydian">Mixolydian</option>
+            </select>
+          </div>
+          <div class="oled-field">
+            <span class="oled-label">AI EVOLVE</span>
+            <select id="select-evolve-bars" class="oled-select" aria-label="Autonomous Evolution Interval">
+              <option value="4" selected>Every 4 Bars</option>
+              <option value="8">Every 8 Bars</option>
+              <option value="0">Hold Groove</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Natural Language AI Genre & Song Prompt Bar -->
+      <div class="ai-conductor-bar">
+        <div class="ai-prompt-wrapper">
+          <span class="ai-prompt-prefix">AI PROMPT //</span>
+          <input
+            id="input-ai-prompt"
+            type="text"
+            class="ai-prompt-input"
+            value="Driving 90s Detroit warehouse 909 techno with squelchy hypnotic TB-303 acid line, rolling Moog sub bass, and deep Dorian Juno-60 pads"
+            placeholder="Describe genre, energy, synth character, tempo (e.g. 'Hypnotic Berlin dub techno at 122 BPM with squelchy 303 & lush CS-80 pads')..."
+            aria-label="AI Song Conductor Prompt"
+          />
+        </div>
+        <button id="btn-ai-generate" type="button" class="hw-btn btn-amber">
+          COMPOSE PROMPT
+        </button>
+        <button id="btn-evolve-now" type="button" class="hw-btn btn-cyan" title="Mutate arrangement & advance song section immediately">
+          EVOLVE NOW ↻
+        </button>
+      </div>
+
+      <!-- Live CoreMIDI & Export Controls -->
+      <div class="midi-status-cluster">
+        <div class="led-indicator" title="Native macOS CoreMIDI Virtual Bus & Hardware Output">
+          <span id="midi-tx-dot" class="led-dot on-green"></span>
+          <span>MIDI TX: <strong id="tx-count-val">0</strong></span>
+        </div>
+        <button id="btn-midi-learn-mode" type="button" class="hw-btn" title="Solo CC Learn Mode: Pauses AI CC stream so only the knob you touch sends MIDI CC for instant mapping in Arturia/Ableton">
+          CC LEARN SOLO
+        </button>
+        <button id="btn-export-midi" type="button" class="hw-btn" title="Download 5-Track Standard MIDI File (.mid) for Ableton Live 12">
+          EXPORT .MID
+        </button>
+        <button id="btn-midi-panic" type="button" class="hw-btn btn-danger" title="Send All Notes Off (CC 123) on all 16 MIDI channels">
+          PANIC
+        </button>
+      </div>
+    </header>
+
+    <!-- ====================================================================
+         2. QUICK GENRE CARTRIDGES & SONG STRUCTURE ARC SELECTOR
+         ==================================================================== -->
+    <nav class="sub-toolbar" aria-label="Genre Cartridges and Song Structure Sections">
+      <div class="cartridge-group">
+        <span class="toolbar-label">GENRE CARTRIDGES //</span>
+        <div id="cartridge-list" class="cartridge-group"></div>
+      </div>
+      <div class="arc-group">
+        <span class="toolbar-label">SONG SECTION ARC //</span>
+        <div id="section-pills" class="arc-group"></div>
+        <span class="toolbar-label" style="margin-left:8px;">AI ENGINE //</span>
+        <select id="select-ai-model" class="oled-select" aria-label="AI Composer Model">
+          <option value="gemini-flash-latest" selected>gemini-flash-latest + Symbolic Hybrid</option>
+          <option value="gemini-flash-lite-latest">gemini-flash-lite-latest + Symbolic Hybrid</option>
+          <option value="symbolic">Symbolic Music Theory v2 (Local Offline Only)</option>
+        </select>
+        <input
+          id="input-gemini-key"
+          type="password"
+          placeholder="Optional GEMINI_API_KEY..."
+          class="oled-select"
+          style="width:148px;"
+          aria-label="Optional Gemini API Key"
+        />
+      </div>
+    </nav>
+
+    <!-- ====================================================================
+         3. 5-INSTRUMENT HARDWARE SYNTHESIZER RACK (DIGITAL DSP + MIDI OUT)
+         ==================================================================== -->
+    <section class="synth-rack-grid" aria-label="5-Instrument Synthesizer Rack">
+      <!-- UNIT 01: TR-808 / TR-909 DRUM COMPUTER -->
+      <article id="unit-card-drums" class="rack-unit unit-drums">
+        <div class="unit-header">
+          <div class="unit-title-group">
+            <span class="unit-tag">UNIT 01 // CH 10 <span id="stage-badge-drums" class="stage-badge">ACTIVE</span></span>
+            <h2 class="unit-name">TR-808 / 909 RHYTHM</h2>
+            <select class="unit-profile-select" data-profile-select="drums" aria-label="Drums MIDI CC Profile">
+              <option value="tr8s" selected>CC Map: Roland TR-8S / TR-08 Hardware</option>
+              <option value="elektron">CC Map: Elektron Syntakt / Digitakt</option>
+              <option value="ableton_drums">CC Map: Ableton 12 Drum Rack Macros</option>
+            </select>
+          </div>
+          <div class="unit-controls-right">
+            <button type="button" class="mini-btn" data-unit-pin="drums" title="Pin/Force Active across all AI sections">PIN</button>
+            <button type="button" class="mini-btn" data-unit-mute="drums" title="Mute Drums">M</button>
+            <button type="button" class="mini-btn" data-unit-solo="drums" title="Solo Drums">S</button>
+            <button type="button" class="mini-btn" data-unit-ext="drums" title="Toggle Internal DSP vs External MIDI Only">DSP+MIDI</button>
+          </div>
+        </div>
+        <div id="knobs-drums" class="knob-grid"></div>
+        <div class="unit-footer">
+          <span id="readout-drums" class="unit-midi-readout">CH10 • READY</span>
+          <button type="button" class="launch-arturia-btn" data-launch-app="ableton">OPEN ABLETON 12 ↗</button>
+        </div>
+      </article>
+
+      <!-- UNIT 02: ROLAND TB-303 BASSLINE ACID -->
+      <article id="unit-card-acid" class="rack-unit unit-acid">
+        <div class="unit-header">
+          <div class="unit-title-group">
+            <span class="unit-tag">UNIT 02 // CH 02 <span id="stage-badge-acid" class="stage-badge resting">RESTING</span></span>
+            <h2 class="unit-name">TB-303 ACID LINE</h2>
+            <select class="unit-profile-select" data-profile-select="acid" aria-label="303 Acid MIDI CC Profile">
+              <option value="arturia_acid_v" selected>CC Map: Arturia Acid V (Factory Default)</option>
+              <option value="roland_tb03">CC Map: Roland TB-03 Boutique Hardware</option>
+              <option value="novation_bs2">CC Map: Novation Bass Station II Acid</option>
+            </select>
+          </div>
+          <div class="unit-controls-right">
+            <button id="btn-303-wave" type="button" class="mini-btn" title="Toggle 303 Sawtooth / Square Waveform">SAW</button>
+            <button type="button" class="mini-btn" data-unit-pin="acid" title="Pin/Force 303 Active even when AI rests it">PIN</button>
+            <button type="button" class="mini-btn" data-unit-mute="acid" title="Mute TB-303">M</button>
+            <button type="button" class="mini-btn" data-unit-solo="acid" title="Solo TB-303">S</button>
+            <button type="button" class="mini-btn" data-unit-ext="acid" title="Toggle Internal DSP vs External MIDI Only">DSP+MIDI</button>
+          </div>
+        </div>
+        <div id="knobs-acid" class="knob-grid"></div>
+        <div class="unit-footer">
+          <span id="readout-acid" class="unit-midi-readout">CH2 • READY</span>
+          <button type="button" class="launch-arturia-btn" data-launch-app="acid_v">OPEN ARTURIA ACID V ↗</button>
+        </div>
+      </article>
+
+      <!-- UNIT 03: MOOG MODEL D SUB BASS -->
+      <article id="unit-card-moog" class="rack-unit unit-moog">
+        <div class="unit-header">
+          <div class="unit-title-group">
+            <span class="unit-tag">UNIT 03 // CH 03 <span id="stage-badge-moog" class="stage-badge">ACTIVE</span></span>
+            <h2 class="unit-name">MOOG BASS / SUB</h2>
+            <select class="unit-profile-select" data-profile-select="moog" aria-label="Moog Bass MIDI CC Profile">
+              <option value="arturia_mini_v4" selected>CC Map: Arturia Mini V4 (Factory Default)</option>
+              <option value="moog_little_phatty">CC Map: Moog Little Phatty / Slim Phatty</option>
+              <option value="moog_minitaur">CC Map: Moog Minitaur / Subsequent 37</option>
+            </select>
+          </div>
+          <div class="unit-controls-right">
+            <button type="button" class="mini-btn" data-unit-pin="moog" title="Pin/Force Moog Active across all AI sections">PIN</button>
+            <button type="button" class="mini-btn" data-unit-mute="moog" title="Mute Moog Bass">M</button>
+            <button type="button" class="mini-btn" data-unit-solo="moog" title="Solo Moog Bass">S</button>
+            <button type="button" class="mini-btn" data-unit-ext="moog" title="Toggle Internal DSP vs External MIDI Only">DSP+MIDI</button>
+          </div>
+        </div>
+        <div id="knobs-moog" class="knob-grid"></div>
+        <div class="unit-footer">
+          <span id="readout-moog" class="unit-midi-readout">CH3 • READY</span>
+          <button type="button" class="launch-arturia-btn" data-launch-app="mini_v">OPEN ARTURIA MINI V4 ↗</button>
+        </div>
+      </article>
+
+      <!-- UNIT 04: PROPHET-5 / MS-20 LEAD -->
+      <article id="unit-card-lead" class="rack-unit unit-lead">
+        <div class="unit-header">
+          <div class="unit-title-group">
+            <span class="unit-tag">UNIT 04 // CH 04 <span id="stage-badge-lead" class="stage-badge">ACTIVE</span></span>
+            <h2 class="unit-name">PROPHET / ANALOG LEAD</h2>
+            <select class="unit-profile-select" data-profile-select="lead" aria-label="Lead Synth MIDI CC Profile">
+              <option value="arturia_prophet5" selected>CC Map: Arturia Prophet-5 V (Factory Default)</option>
+              <option value="dsi_prophet08">CC Map: Sequential Prophet '08 / Rev2 HW</option>
+              <option value="korg_minilogue_xd">CC Map: Korg Minilogue XD Hardware</option>
+            </select>
+          </div>
+          <div class="unit-controls-right">
+            <button type="button" class="mini-btn" data-unit-pin="lead" title="Pin/Force Lead Active across all AI sections">PIN</button>
+            <button type="button" class="mini-btn" data-unit-mute="lead" title="Mute Lead">M</button>
+            <button type="button" class="mini-btn" data-unit-solo="lead" title="Solo Lead">S</button>
+            <button type="button" class="mini-btn" data-unit-ext="lead" title="Toggle Internal DSP vs External MIDI Only">DSP+MIDI</button>
+          </div>
+        </div>
+        <div id="knobs-lead" class="knob-grid"></div>
+        <div class="unit-footer">
+          <span id="readout-lead" class="unit-midi-readout">CH4 • READY</span>
+          <button type="button" class="launch-arturia-btn" data-launch-app="prophet_v">OPEN PROPHET-5 V ↗</button>
+        </div>
+      </article>
+
+      <!-- UNIT 05: JUNO-60 / CS-80 LUSH POLY PADS -->
+      <article id="unit-card-pads" class="rack-unit unit-pads">
+        <div class="unit-header">
+          <div class="unit-title-group">
+            <span class="unit-tag">UNIT 05 // CH 05 <span id="stage-badge-pads" class="stage-badge">ACTIVE</span></span>
+            <h2 class="unit-name">JUNO-60 / CS-80 PADS</h2>
+            <select class="unit-profile-select" data-profile-select="pads" aria-label="Poly Pads MIDI CC Profile">
+              <option value="arturia_juno_jup8" selected>CC Map: Arturia Jun-6 V / Jup-8 V4 (Factory)</option>
+              <option value="roland_ju06a">CC Map: Roland JU-06A Boutique Hardware</option>
+              <option value="dsi_prophet08_pads">CC Map: Prophet '08 / Novation Peak Pads</option>
+            </select>
+          </div>
+          <div class="unit-controls-right">
+            <button type="button" class="mini-btn" data-unit-pin="pads" title="Pin/Force Pads Active across all AI sections">PIN</button>
+            <button type="button" class="mini-btn" data-unit-mute="pads" title="Mute Poly Pads">M</button>
+            <button type="button" class="mini-btn" data-unit-solo="pads" title="Solo Poly Pads">S</button>
+            <button type="button" class="mini-btn" data-unit-ext="pads" title="Toggle Internal DSP vs External MIDI Only">DSP+MIDI</button>
+          </div>
+        </div>
+        <div id="knobs-pads" class="knob-grid"></div>
+        <div class="unit-footer">
+          <span id="readout-pads" class="unit-midi-readout">CH5 • READY</span>
+          <button type="button" class="launch-arturia-btn" data-launch-app="jup8_v">OPEN JUP-8 V4 ↗</button>
+        </div>
+      </article>
+    </section>
+
+    <!-- ====================================================================
+         4. LOWER SPLIT: 16-STEP SEQUENCER MATRIX + MASTER FX & MIDI PATCHBAY
+         ==================================================================== -->
+    <main class="workspace-split">
+      <!-- LEFT: 16-STEP HARDWARE SEQUENCER MATRIX & 4-BAR POLY CHORD STRIP -->
+      <div class="sequencer-panel">
+        <section class="panel-card" aria-label="16-Step Hardware Sequencer Matrix">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              16-STEP MULTI-SYNTH HARDWARE SEQUENCER &amp; TB-303 ACCENT/SLIDE MATRIX
+            </h2>
+            <span class="brand-sub">Click step to toggle • Right-click melodic step to re-pitch in scale</span>
+          </div>
+          <div id="sequencer-matrix"></div>
+        </section>
+
+        <section class="panel-card" aria-label="4-Bar Polyphonic Chord Progression">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              CH 05 // 4-BAR JUNO-60 / CS-80 POLYPHONIC CHORD PROGRESSION
+            </h2>
+            <div style="display:flex;gap:6px;">
+              <button type="button" class="launch-arturia-btn" data-launch-app="jun6_v">OPEN JUN-6 V ↗</button>
+              <button type="button" class="launch-arturia-btn" data-launch-app="cs80_v">OPEN CS-80 V4 ↗</button>
+            </div>
+          </div>
+          <div id="chord-strip" class="chord-strip-grid"></div>
+        </section>
+      </div>
+
+      <!-- RIGHT: OSCILLOSCOPE + MASTER FX RACK + COREMIDI PATCHBAY + AI LOG -->
+      <aside class="right-column-stack">
+        <!-- MASTER ANALOG EFFECTS CHAIN & REAL-TIME OSCILLOSCOPE -->
+        <section class="panel-card" aria-label="Master Effects Chain and Oscilloscope">
+          <div class="panel-header">
+            <h2 class="panel-title">MASTER FX CHAIN &amp; OUTPUT TELEMETRY</h2>
+            <span class="brand-sub">TAPE-201 • LX-24 • BUS FORCE</span>
+          </div>
+          <div class="scope-canvas-wrap">
+            <canvas id="master-scope"></canvas>
+            <div class="scope-overlay-meta">
+              <span>INTERNAL 48kHz DSP + COREMIDI BUS</span>
+              <span>DBL-CLICK FILTER TO CENTER</span>
+            </div>
+          </div>
+          <div id="knobs-fx" class="fx-knob-row"></div>
+        </section>
+
+        <!-- NATIVE COREMIDI VIRTUAL BUS & PHYSICAL HARDWARE PATCHBAY -->
+        <section class="panel-card" aria-label="CoreMIDI Virtual Ports and Hardware Interface Patchbay">
+          <div class="panel-header">
+            <h2 class="panel-title">COREMIDI VIRTUAL &amp; HARDWARE PATCHBAY</h2>
+            <span class="patch-badge">LIVE MACOS COREMIDI</span>
+          </div>
+          <div id="patchbay-ports" class="patchbay-list"></div>
+        </section>
+
+        <!-- AI CONDUCTOR & MIDI TELEMETRY FEED -->
+        <section class="panel-card" aria-label="AI Conductor Telemetry Log">
+          <div class="panel-header">
+            <h2 class="panel-title">AI CONDUCTOR &amp; MIDI STREAM LOG</h2>
+            <span class="brand-sub">CONTINUOUS EVOLUTION ENGINE</span>
+          </div>
+          <div id="telemetry-log" class="telemetry-log"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

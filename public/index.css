@@ -1,0 +1,1121 @@
+/* ============================================================================
+   AETHER-909 // AI AUTONOMOUS HARDWARE & VIRTUAL MIDI SYNTHESIZER STUDIO
+   Design Paradigm: Industrial Hardware Synthesizer & Anodized Rack Telemetry
+   Inspired by Teenage Engineering OP-1 Field, Elektron Digitakt, Roland TR-808/TB-303
+   ============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  /* Anodized Hardware Chassis Surfaces */
+  --bg-chassis: #0e1013;
+  --bg-rack: #15181c;
+  --bg-module: #1b1f25;
+  --bg-module-raised: #22272f;
+  --bg-well: #090b0d;
+  --bg-oled: #060809;
+
+  /* Precision Hairline Dividers & Bevels */
+  --border-hairline: #282d37;
+  --border-bevel-top: rgba(255, 255, 255, 0.06);
+  --border-well: #1e232b;
+
+  /* Silk-Screened Hardware Typography */
+  --text-primary: #f2f0ea;
+  --text-secondary: #9ba3b0;
+  --text-muted: #5e6673;
+
+  /* Authentic 808 / 303 / Elektron LED & Signal Accents (Zero Purple/Violet) */
+  --accent-amber: #ff6b1a;      /* Roland 808 Orange */
+  --accent-amber-dim: rgba(255, 107, 26, 0.18);
+  --accent-gold: #f5b700;       /* 808 Yellow-Gold */
+  --accent-gold-dim: rgba(245, 183, 0, 0.18);
+  --accent-cream: #f2efe9;      /* 808 Cream Step Keycap */
+  --accent-green: #10b981;      /* Phosphor Lock / Clock Sync */
+  --accent-green-dim: rgba(16, 185, 129, 0.16);
+  --accent-cyan: #06b6d4;       /* AI Conductor / Telemetry */
+  --accent-cyan-dim: rgba(6, 182, 212, 0.16);
+  --accent-crimson: #ef4444;    /* 808 Red / Accent / Record */
+  --accent-crimson-dim: rgba(239, 68, 68, 0.18);
+
+  /* Fonts */
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background-color: var(--bg-chassis);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow-x: hidden;
+}
+
+/* Subtle anodized brushed metal surface sheen */
+body {
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(255, 107, 26, 0.04), transparent 55%),
+    linear-gradient(180deg, #121519 0%, #0d0f12 100%);
+  min-height: 100vh;
+}
+
+/* ============================================================================
+   LAYOUT SHELL
+   ============================================================================ */
+
+.studio-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 10px 14px 18px;
+  gap: 10px;
+}
+
+/* ============================================================================
+   1. TOP HARDWARE TRANSPORT & AI CONDUCTOR BAR
+   ============================================================================ */
+
+.master-header {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-rack);
+  border: 1px solid var(--border-hairline);
+  border-top-color: var(--border-bevel-top);
+  border-radius: 6px;
+  padding: 10px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.brand-plate {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 12px;
+  border-right: 1px solid var(--border-hairline);
+}
+
+.brand-screw {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0b0d10;
+  border: 1px solid #333944;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.brand-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.brand-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--accent-amber);
+  color: #090a0c;
+  letter-spacing: 0.06em;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Transport Cluster */
+.transport-cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 12px;
+  border-right: 1px solid var(--border-hairline);
+}
+
+.hw-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border-radius: 4px;
+  border: 1px solid #323844;
+  background: linear-gradient(180deg, #262b34 0%, #1b1f26 100%);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.hw-btn:hover {
+  background: linear-gradient(180deg, #2e3440 0%, #222730 100%);
+  border-color: #454d5e;
+}
+
+.hw-btn:active {
+  transform: translateY(1px);
+}
+
+.hw-btn.btn-play.active {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  border-color: #34d399;
+  color: #04130d;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.35);
+}
+
+.hw-btn.btn-amber {
+  background: linear-gradient(180deg, #ff792e 0%, #e0530c 100%);
+  border-color: #ff9457;
+  color: #0d0805;
+  font-weight: 700;
+}
+
+.hw-btn.btn-amber:hover {
+  background: linear-gradient(180deg, #ff8847 0%, #ee5d14 100%);
+}
+
+.hw-btn.btn-cyan {
+  background: var(--accent-cyan-dim);
+  border-color: rgba(6, 182, 212, 0.45);
+  color: #67e8f9;
+}
+
+.hw-btn.btn-cyan:hover {
+  background: rgba(6, 182, 212, 0.28);
+}
+
+.hw-btn.btn-danger {
+  background: var(--accent-crimson-dim);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
+
+/* OLED Readout Display */
+.oled-readout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-oled);
+  border: 1px solid #252b34;
+  border-radius: 4px;
+  padding: 5px 11px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.85);
+}
+
+.oled-field {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.oled-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.oled-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-amber);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.oled-value.cyan {
+  color: var(--accent-cyan);
+}
+
+.oled-value.green {
+  color: var(--accent-green);
+}
+
+.oled-input-num {
+  width: 54px;
+  background: transparent;
+  border: none;
+  color: var(--accent-amber);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+.oled-select {
+  background: #0d1014;
+  color: var(--text-primary);
+  border: 1px solid #262c36;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 5px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* AI Conductor Prompt Console */
+.ai-conductor-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.ai-prompt-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--bg-well);
+  border: 1px solid #2b323d;
+  border-radius: 4px;
+  padding: 3px 6px 3px 10px;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7);
+}
+
+.ai-prompt-wrapper:focus-within {
+  border-color: var(--accent-amber);
+}
+
+.ai-prompt-prefix {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-right: 8px;
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+}
+
+.ai-prompt-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  padding: 5px 4px;
+  outline: none;
+}
+
+.ai-prompt-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Status Telemetry Strip on Right of Header */
+.midi-status-cluster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.led-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  padding: 5px 9px;
+  background: var(--bg-well);
+  border: 1px solid var(--border-well);
+  border-radius: 4px;
+}
+
+.led-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #374151;
+  transition: background 0.08s ease, box-shadow 0.08s ease;
+}
+
+.led-dot.on-green {
+  background: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
+}
+
+.led-dot.on-amber {
+  background: var(--accent-amber);
+  box-shadow: 0 0 8px var(--accent-amber);
+}
+
+/* ============================================================================
+   2. GENRE CARTRIDGES & SONG ARC BAR
+   ============================================================================ */
+
+.sub-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--bg-rack);
+  border: 1px solid var(--border-hairline);
+  border-radius: 6px;
+  padding: 7px 12px;
+  flex-wrap: wrap;
+}
+
+.cartridge-group,
+.arc-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.toolbar-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.cartridge-btn {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 4px 9px;
+  border-radius: 3px;
+  border: 1px solid #2b313c;
+  background: #1a1e24;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cartridge-btn:hover {
+  color: var(--text-primary);
+  border-color: #434c5d;
+  background: #222730;
+}
+
+.cartridge-btn.active {
+  background: var(--accent-amber-dim);
+  border-color: var(--accent-amber);
+  color: #ff9c66;
+  font-weight: 600;
+}
+
+.section-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 3px;
+  border: 1px solid #272d37;
+  background: #121519;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.section-pill:hover {
+  color: var(--text-primary);
+  border-color: #3d4656;
+}
+
+.section-pill.active {
+  background: var(--accent-cyan-dim);
+  border-color: var(--accent-cyan);
+  color: #67e8f9;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   3. 5-UNIT HARDWARE SYNTH RACK STRIPS
+   ============================================================================ */
+
+.synth-rack-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 1420px) {
+  .synth-rack-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 920px) {
+  .synth-rack-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rack-unit {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-module);
+  border: 1px solid var(--border-hairline);
+  border-top: 2px solid var(--unit-accent, var(--accent-amber));
+  border-radius: 6px;
+  padding: 10px 11px;
+  gap: 9px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+
+.rack-unit.unit-drums { --unit-accent: #ff6b1a; }
+.rack-unit.unit-acid  { --unit-accent: #f5b700; }
+.rack-unit.unit-moog  { --unit-accent: #10b981; }
+.rack-unit.unit-lead  { --unit-accent: #06b6d4; }
+.rack-unit.unit-pads  { --unit-accent: #f2efe9; }
+
+.rack-unit.ai-resting {
+  opacity: 0.62;
+  border-top-color: #3a4250;
+}
+
+.stage-badge {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(16, 185, 129, 0.16);
+  color: var(--accent-green);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.stage-badge.resting {
+  background: rgba(155, 163, 176, 0.12);
+  color: var(--text-secondary);
+  border-color: #323946;
+}
+
+.unit-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.unit-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.unit-tag {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--unit-accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.unit-name {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+
+.unit-hw-target {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-secondary);
+}
+
+.unit-profile-select {
+  width: 100%;
+  background: #0d1014;
+  color: var(--text-primary);
+  border: 1px solid #28303d;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  padding: 3px 6px;
+  outline: none;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.unit-profile-select:hover,
+.unit-profile-select:focus {
+  border-color: var(--unit-accent);
+}
+
+.knob-cc-badge {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--unit-accent, var(--accent-amber));
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0 4px;
+  border-radius: 2px;
+}
+
+.hw-btn.learn-active {
+  background: linear-gradient(180deg, #f5b700 0%, #ca8a04 100%);
+  border-color: #fde047;
+  color: #0b0802;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(245, 183, 0, 0.4);
+}
+
+.unit-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mini-btn {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 3px;
+  border: 1px solid #303744;
+  background: #14171c;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.mini-btn:hover {
+  color: var(--text-primary);
+  border-color: #4b5568;
+}
+
+.mini-btn.mute-active {
+  background: var(--accent-crimson);
+  border-color: #f87171;
+  color: #090303;
+}
+
+.mini-btn.solo-active {
+  background: var(--accent-gold);
+  border-color: #fde047;
+  color: #090701;
+}
+
+.mini-btn.ext-active {
+  background: var(--accent-cyan-dim);
+  border-color: var(--accent-cyan);
+  color: #67e8f9;
+}
+
+/* Rotary Knob Matrix inside each Rack Unit */
+.knob-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px 4px;
+  padding: 4px 0;
+}
+
+.knob-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: ns-resize;
+}
+
+.knob-svg {
+  width: 42px;
+  height: 42px;
+  overflow: visible;
+}
+
+.knob-track {
+  fill: none;
+  stroke: #0c0e12;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+
+.knob-arc {
+  fill: none;
+  stroke: var(--unit-accent, var(--accent-amber));
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.06s linear;
+}
+
+.knob-body {
+  fill: #14181f;
+  stroke: #323946;
+  stroke-width: 1.2;
+}
+
+.knob-pointer {
+  stroke: var(--text-primary);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.knob-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.knob-val {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Unit Footer: MIDI Note Telemetry + Launch Arturia Button */
+.unit-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px solid #232830;
+}
+
+.unit-midi-readout {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  background: var(--bg-well);
+  padding: 3px 7px;
+  border-radius: 3px;
+  border: 1px solid #1f242d;
+  min-width: 88px;
+  font-variant-numeric: tabular-nums;
+}
+
+.launch-arturia-btn {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: #151920;
+  border: 1px solid #2f3744;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.launch-arturia-btn:hover {
+  border-color: var(--unit-accent);
+  color: var(--text-primary);
+  background: #1d232c;
+}
+
+/* ============================================================================
+   4. LOWER WORKSPACE: SEQUENCER MATRIX (LEFT) + FX & MIDI PATCHBAY (RIGHT)
+   ============================================================================ */
+
+.workspace-split {
+  display: grid;
+  grid-template-columns: 1fr 430px;
+  gap: 10px;
+  align-items: start;
+}
+
+@media (max-width: 1280px) {
+  .workspace-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sequencer-panel,
+.right-column-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panel-card {
+  background: var(--bg-rack);
+  border: 1px solid var(--border-hairline);
+  border-radius: 6px;
+  padding: 11px 13px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  margin-bottom: 9px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 16-Step Ruler Header */
+.step-ruler {
+  display: grid;
+  grid-template-columns: 118px repeat(16, 1fr);
+  gap: 4px;
+  margin-bottom: 5px;
+  align-items: center;
+}
+
+.step-num {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2px 0;
+  border-radius: 2px;
+}
+
+.step-num.beat- down {
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.step-num.playhead {
+  background: var(--accent-amber);
+  color: #090a0c;
+  font-weight: 700;
+}
+
+/* Drum & Synth Sequencer Rows */
+.seq-row {
+  display: grid;
+  grid-template-columns: 118px repeat(16, 1fr);
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.seq-row-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-right: 8px;
+}
+
+.seq-row-badge {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: #20252e;
+  color: var(--text-muted);
+}
+
+/* Classic 808 / Elektron Step Pad */
+.step-pad {
+  height: 28px;
+  border-radius: 3px;
+  border: 1px solid #262c36;
+  background: #101318;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-muted);
+  transition: all 0.07s ease;
+}
+
+/* 808 Quarter-Note Group Tinting */
+.step-pad.group-0 { border-bottom: 2px solid rgba(239, 68, 68, 0.45); }
+.step-pad.group-1 { border-bottom: 2px solid rgba(255, 107, 26, 0.45); }
+.step-pad.group-2 { border-bottom: 2px solid rgba(245, 183, 0, 0.45); }
+.step-pad.group-3 { border-bottom: 2px solid rgba(242, 239, 233, 0.45); }
+
+.step-pad:hover {
+  border-color: #465062;
+  background: #181c24;
+}
+
+.step-pad.active-drum {
+  background: linear-gradient(180deg, #ff7b33 0%, #d94e07 100%);
+  border-color: #ff9c66;
+  color: #0b0704;
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(255, 107, 26, 0.32);
+}
+
+.step-pad.active-acid {
+  background: linear-gradient(180deg, #f5b700 0%, #c99200 100%);
+  border-color: #fde047;
+  color: #0d0a02;
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(245, 183, 0, 0.28);
+}
+
+.step-pad.active-moog {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  border-color: #6ee7b7;
+  color: #04140e;
+  font-weight: 700;
+}
+
+.step-pad.active-lead {
+  background: linear-gradient(180deg, #06b6d4 0%, #0891b2 100%);
+  border-color: #67e8f9;
+  color: #041317;
+  font-weight: 700;
+}
+
+.step-pad.current-step {
+  outline: 2px solid #ffffff;
+  outline-offset: -1px;
+  z-index: 2;
+}
+
+/* TB-303 Dedicated Accent & Slide Sub-Rows */
+.acid-programmer-box {
+  margin-top: 8px;
+  padding: 9px 10px;
+  background: var(--bg-well);
+  border: 1px solid #232933;
+  border-radius: 5px;
+}
+
+.sub-step-toggle {
+  height: 19px;
+  border-radius: 2px;
+  border: 1px solid #242a34;
+  background: #12151b;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sub-step-toggle.acc-on {
+  background: var(--accent-crimson);
+  border-color: #f87171;
+  color: #0a0202;
+  font-weight: 700;
+}
+
+.sub-step-toggle.sld-on {
+  background: var(--accent-cyan);
+  border-color: #67e8f9;
+  color: #021216;
+  font-weight: 700;
+}
+
+/* 4-Bar Poly Chord Progression Strip */
+.chord-strip-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.chord-card {
+  background: var(--bg-well);
+  border: 1px solid #252b35;
+  border-radius: 4px;
+  padding: 7px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chord-card.active-bar {
+  border-color: var(--accent-amber);
+  background: rgba(255, 107, 26, 0.09);
+}
+
+.chord-bar-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.chord-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.chord-notes {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-secondary);
+}
+
+/* ============================================================================
+   5. RIGHT COLUMN: OSCILLOSCOPE + MASTER FX + COREMIDI / ARTURIA PATCHBAY
+   ============================================================================ */
+
+.scope-canvas-wrap {
+  background: var(--bg-oled);
+  border: 1px solid #232933;
+  border-radius: 4px;
+  height: 92px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+#master-scope {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.scope-overlay-meta {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.fx-knob-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+/* MIDI Patchbay & Hardware Routing Matrix */
+.patchbay-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 9px;
+}
+
+.patch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-well);
+  border: 1px solid #202630;
+  border-radius: 4px;
+  padding: 5px 9px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
+.patch-port-name {
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.patch-badge {
+  font-size: 9px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: var(--accent-green-dim);
+  color: var(--accent-green);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+/* AI Conductor & Live MIDI Stream Log */
+.telemetry-log {
+  background: var(--bg-oled);
+  border: 1px solid #222832;
+  border-radius: 4px;
+  height: 155px;
+  overflow-y: auto;
+  padding: 7px 9px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.log-entry {
+  display: flex;
+  gap: 7px;
+  line-height: 1.35;
+}
+
+.log-time {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.log-tag-ai {
+  color: var(--accent-cyan);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.log-tag-midi {
+  color: var(--accent-amber);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.log-msg {
+  color: var(--text-primary);
+}

@@ -1,0 +1,14 @@
+[Unit]
+Description=Sinthwave AETHER-909 Headless USB MIDI Synthesizer Service
+After=network.target sound.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/aether-synth-runner.sh
+Restart=always
+RestartSec=2
+LimitRTPRIO=95
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target

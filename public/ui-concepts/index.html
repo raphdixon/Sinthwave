@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SINTHWAVE // AETHER-909 — 10 UI Visual Directions</title>
+  <style>
+    :root {
+      --bg: #F6F5F2;
+      --surface: #FFFFFF;
+      --ink: #161616;
+      --muted: #66645E;
+      --border: #E2E0D8;
+      --accent: #FF4F00;
+      --accent-soft: rgba(255, 79, 0, 0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+      padding-bottom: 80px;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 32px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .badge {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      padding: 6px 11px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .btn:hover, .btn.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+    .brief-bar {
+      max-width: 1680px;
+      margin: 24px auto 0;
+      padding: 0 32px;
+    }
+    .brief-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 22px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+    .brief-item strong {
+      color: var(--accent);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      display: block;
+    }
+    .grid {
+      max-width: 1680px;
+      margin: 24px auto;
+      padding: 0 32px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+    }
+    .grid.single-col {
+      grid-template-columns: 1fr;
+      max-width: 1360px;
+    }
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.09);
+      border-color: #C9C5B8;
+    }
+    .card.favorite {
+      border: 2px solid var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+    .card-head {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-num {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 3px 8px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .card-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .img-wrap {
+      position: relative;
+      background: #ECEAE4;
+      cursor: zoom-in;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+    }
+    .img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.25s ease;
+    }
+    .img-wrap:hover img {
+      transform: scale(1.015);
+    }
+    .card-foot {
+      padding: 12px 20px;
+      background: #FAFAF8;
+      border-top: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    /* Lightbox modal */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 15, 15, 0.92);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox-bar {
+      width: 100%;
+      max-width: 1600px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .lightbox-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .lightbox img {
+      max-width: 96vw;
+      max-height: 84vh;
+      border-radius: 10px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      object-fit: contain;
+      background: #fff;
+    }
+    .lightbox-nav {
+      display: flex;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="badge">SINTHWAVE // AETHER-909</span>
+      <div>
+        <h1>10 Skeuomorphic Hardware UI Visual Directions</h1>
+        <div class="subtitle">Clean White / Warm Studio Off-White • 4 Hardware Synths • Top Genre + "Steer the Sound" Bar • Bottom 16-Step Sequencer</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="btn active" id="view-2col" onclick="setCols(false)">2-Column Grid</button>
+      <button class="btn" id="view-1col" onclick="setCols(true)">Full-Width Stack</button>
+      <a class="btn" href="all-10-ui-concepts-grid.png" target="_blank">Open Contact Sheet PNG</a>
+    </div>
+  </header>
+
+  <div class="brief-bar">
+    <div class="brief-card">
+      <div class="brief-item">
+        <strong>1. Top Bar (Above the Fold)</strong>
+        Minimal Changeable Genre Pill + "Steer the Sound" AI Natural-Language Input
+      </div>
+      <div class="brief-item">
+        <strong>2. Four Hardware Synthesizers</strong>
+        SP-404 / EP-40 (Drums) • Moog Sub 37 (Bass) • Prophet-6 / Volca (Lead) • Korg Minilogue / Kronos (Poly Pads)
+      </div>
+      <div class="brief-item">
+        <strong>3. Lower Dock</strong>
+        Analog 16-Step Hardware Sequencer (Mechanical Step Keys + Glowing LEDs)
+      </div>
+      <div class="brief-item">
+        <strong>4. Below the Fold</strong>
+        Technical DSP Telemetry, Lyria Logs & MIDI Settings Pushed Down (Scroll)
+      </div>
+    </div>
+  </div>
+
+  <main class="grid" id="gallery"></main>
+
+  <div class="lightbox" id="lightbox" onclick="if(event.target===this)closeLightbox()">
+    <div class="lightbox-bar">
+      <div class="lightbox-title" id="lb-title"></div>
+      <div class="lightbox-nav">
+        <button class="btn" onclick="stepLightbox(-1)">← Prev</button>
+        <button class="btn" onclick="stepLightbox(1)">Next →</button>
+        <a class="btn" id="lb-raw" href="#" target="_blank">Open Full 2K PNG</a>
+        <button class="btn" onclick="closeLightbox()">✕ Close (Esc)</button>
+      </div>
+    </div>
+    <img id="lb-img" src="" alt="" />
+  </div>
+
+  <script>
+    const concepts = [
+      {
+        num: "01",
+        slug: "concept-01-te-field-silver.png",
+        short: "concept-01.png",
+        title: "Teenage Engineering OP-1 Field / TP-7 Anodized Silver",
+        sub: "CNC milled aluminum synth modules, ochre/orange/grey Roto-encoders, paper-white background, minimal top Genre + 'Steer the Sound' pill bar, OP-Z mechanical step keys."
+      },
+      {
+        num: "02",
+        slug: "concept-02-braun-rams-atelier.png",
+        short: "concept-02.png",
+        title: "Dieter Rams / Braun 1968 Industrial White & Bakelite",
+        sub: "Matte snow-white polycarbonate modules, charcoal & vermilion physical knobs, precision tick-mark dials, analog toggle switches, mechanical 808 step buttons."
+      },
+      {
+        num: "03",
+        slug: "concept-03-ep40-riddim-bauhaus.png",
+        short: "concept-03.png",
+        title: "Teenage Engineering EP-133 K.O. II / EP-40 Technical Grid",
+        sub: "Technical dot-matrix paper background, exposed PCB/stencil callouts, square calculator-style tactile rubber pads, red/amber segment LEDs, bold Swiss typography."
+      },
+      {
+        num: "04",
+        slug: "concept-04-vintage-wood-and-cream.png",
+        short: "concept-04.png",
+        title: "Boutique Studio Cream, Walnut & Brushed Brass",
+        sub: "Warm gallery white background, walnut side-cheeks on the Moog Sub 37 and Prophet-6 modules, silver-skirted Moog knobs, warm glowing analog VU meters, cream/orange 808 step rail."
+      },
+      {
+        num: "05",
+        slug: "concept-05-japanese-hi-fi-silverface.png",
+        short: "concept-05.png",
+        title: "1970s Japanese Hi-Fi Silverface (Roland / Korg Machined Metal)",
+        sub: "Machined satin aluminum faceplates on white desk, weighted knurled metal pots, recessed red LED step jewel lamps, physical toggle switches."
+      },
+      {
+        num: "06",
+        slug: "concept-06-modular-eurorack-white.png",
+        short: "concept-06.png",
+        title: "Clean White Intellijel / Mutable Instruments Eurorack Skiff",
+        sub: "4 distinct white & silver Eurorack synth faceplates bolted into a minimalist white frame, glowing jack/LED indicators, physical slide potentiometers + 16-step analog trigger rail."
+      },
+      {
+        num: "07",
+        slug: "concept-07-playdate-high-contrast-pop.png",
+        short: "concept-07.png",
+        title: "Teenage Engineering Playdate / Pocket Operator Industrial Pop",
+        sub: "Crisp white surface, bold black hairline CAD borders, vibrant primary hardware accents (Signal Orange SP-404, Emerald Moog, Cobalt Prophet, Yellow Minilogue), chunky 3D rotary caps."
+      },
+      {
+        num: "08",
+        slug: "concept-08-nord-red-and-monochrome.png",
+        short: "concept-08.png",
+        title: "Scandinavian Studio Monochrome + Clavia / TE Vermilion",
+        sub: "Stark architectural white & graphite modules with surgical vermilion red encoder caps, circular dial gauges, and a recessed 16-step mechanical sequencer bar."
+      },
+      {
+        num: "09",
+        slug: "concept-09-transparent-nothing-tech.png",
+        short: "concept-09.png",
+        title: "Nothing / Teenage Engineering Translucent Industrial White",
+        sub: "Semi-translucent white polycarbonate casings revealing subtle circuit traces, dot-matrix typography, white & orange tactile encoders, glowing white/red LED step matrix."
+      },
+      {
+        num: "10",
+        slug: "concept-10-buchla-west-coast-lab.png",
+        short: "concept-10.png",
+        title: "West Coast Lab Acoustic White & Anodized Color Plates",
+        sub: "Laboratory white background, anodized metallic module plates with Buchla/Moog pointer knobs, banana-jack style modulation badges, and a 16-stage analog touch-plate / step sequencer."
+      }
+    ];
+
+    let currentIdx = 0;
+    const gallery = document.getElementById("gallery");
+
+    concepts.forEach((c, idx) => {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.id = `card-${c.num}`;
+      card.innerHTML = `
+        <div class="card-head">
+          <div>
+            <span class="card-num">CONCEPT ${c.num}</span>
+            <div class="card-title">${c.title}</div>
+            <div class="card-sub">${c.sub}</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn" onclick="toggleFav('${c.num}', this)">☆ Shortlist</button>
+            <button class="btn" onclick="openLightbox(${idx})">⤢ Zoom 2K</button>
+          </div>
+        </div>
+        <div class="img-wrap" onclick="openLightbox(${idx})">
+          <img src="${c.slug}" alt="${c.title}" loading="lazy" />
+        </div>
+        <div class="card-foot">
+          <span>${c.slug} (${c.short})</span>
+          <span>2752 × 1536 px (16:9 2K)</span>
+        </div>
+      `;
+      gallery.appendChild(card);
+    });
+
+    function setCols(single) {
+      gallery.classList.toggle("single-col", single);
+      document.getElementById("view-1col").classList.toggle("active", single);
+      document.getElementById("view-2col").classList.toggle("active", !single);
+    }
+
+    function toggleFav(num, btn) {
+      const card = document.getElementById(`card-${num}`);
+      const isFav = card.classList.toggle("favorite");
+      btn.textContent = isFav ? "★ Shortlisted" : "☆ Shortlist";
+      btn.classList.toggle("active", isFav);
+    }
+
+    function openLightbox(idx) {
+      currentIdx = (idx + concepts.length) % concepts.length;
+      const c = concepts[currentIdx];
+      document.getElementById("lb-title").textContent = `Concept ${c.num} — ${c.title}`;
+      document.getElementById("lb-img").src = c.slug;
+      document.getElementById("lb-raw").href = c.slug;
+      document.getElementById("lightbox").classList.add("open");
+    }
+
+    function stepLightbox(delta) {
+      openLightbox(currentIdx + delta);
+    }
+
+    function closeLightbox() {
+      document.getElementById("lightbox").classList.remove("open");
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (!document.getElementById("lightbox").classList.contains("open")) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") stepLightbox(1);
+      if (e.key === "ArrowLeft") stepLightbox(-1);
+    });
+  </script>
+</body>
+</html>

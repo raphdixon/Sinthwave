@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SINTHWAVE // 26mm×26mm Keyring E-Ink Synth Badges</title>
+  <style>
+    :root {
+      --bg: #0d0f12;
+      --panel: #16191e;
+      --border: #2a2f37;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --accent: #e63900;
+      --accent-hover: #ff4d14;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+      padding: 32px 24px 64px;
+      max-width: 1360px;
+      margin: 0 auto;
+    }
+    header {
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 20px;
+      margin-bottom: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+    }
+    .tag {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-family: "SF Mono", "Menlo", monospace;
+      font-weight: 900;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 6px;
+      font-family: "SF Mono", "Menlo", monospace;
+    }
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #232830;
+      color: #fff;
+      text-decoration: none;
+      font-family: "SF Mono", "Menlo", monospace;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 9px 13px;
+      border-radius: 6px;
+      border: 1px solid #38404d;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn:hover {
+      background: #2f3640;
+      border-color: #556070;
+    }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+    .section-title {
+      font-family: "SF Mono", "Menlo", monospace;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin: 32px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title span.dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      background: var(--accent);
+      display: inline-block;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(295px, 1fr));
+      gap: 22px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: "SF Mono", "Menlo", monospace;
+    }
+    .unit-id {
+      font-size: 13px;
+      font-weight: 900;
+      color: #fff;
+      background: #000;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #333;
+    }
+    .unit-role {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .preview-stage {
+      background: #08090b;
+      border: 1px solid #22262e;
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    /* Keyring E-Ink Physical Casing Mock */
+    .keyring-bezel {
+      background: #23272e;
+      padding: 12px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.12);
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .keyring-bezel img {
+      width: 220px;
+      height: 220px;
+      display: block;
+      border-radius: 4px;
+      image-rendering: pixelated;
+      transition: all 0.2s ease;
+    }
+    body.physical-scale .keyring-bezel img {
+      width: 26mm;
+      height: 26mm;
+    }
+    .dl-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .dl-label {
+      font-family: "SF Mono", "Menlo", monospace;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .dl-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .sheet-box {
+      margin-top: 36px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .sheet-box img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid #2e3440;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="tag">26mm × 26mm SQUARE E-INK KEYRING BADGES</div>
+      <h1>SINTHWAVE // 4-UNIT RASPBERRY PI SYNTH RACK</h1>
+      <div class="subtitle">Native 200×200 (1.54" Square Panel) &amp; 800×800 High-DPI Companion Masters • Zero-Blur Pure E-Ink Palettes</div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" onclick="document.body.classList.toggle('physical-scale')">
+        Toggle 1:1 Physical 26mm×26mm Scale
+      </button>
+      <a class="btn btn-primary" href="./all-4-eink-badges-sheet.png" download="all-4-eink-badges-sheet.png">
+        ⬇ Download 2×2 Master Sheet (PNG)
+      </a>
+    </div>
+  </header>
+
+  <div class="section-title">
+    <span class="dot"></span>
+    A. 3-Color E-Ink Palette (#000000 / #FFFFFF / #E63900)
+  </div>
+  <div class="grid">
+    <!-- Unit 1 Color -->
+    <div class="card">
+      <div class="card-header">
+        <span class="unit-id">UNIT 01 // CH 10</span>
+        <span class="unit-role">SP-404 / EP-40 DRUMS</span>
+      </div>
+      <div class="preview-stage">
+        <div class="keyring-bezel">
+          <img src="./unit1-sp404-ep40-drums-color-800x800.png" alt="Unit 01 SP-404 / EP-40 Color E-Ink Badge" />
+        </div>
+      </div>
+      <div class="dl-group">
+        <div class="dl-label">1-Click Download (3-Color E-Ink)</div>
+        <div class="dl-row">
+          <a class="btn btn-primary" href="./unit1-sp404-ep40-drums-color-200x200.png" download>200×200 PNG</a>
+          <a class="btn" href="./unit1-sp404-ep40-drums-color-800x800.png" download>800×800 PNG</a>
+          <a class="btn" href="./unit1-sp404-ep40-drums-color.svg" download>Vector SVG</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unit 2 Color -->
+    <div class="card">
+      <div class="card-header">
+        <span class="unit-id">UNIT 02 // CH 02-03</span>
+        <span class="unit-role">MOOG SUB 37 BASS</span>
+      </div>
+      <div class="preview-stage">
+        <div class="keyring-bezel">
+          <img src="./unit2-moog-sub37-bass-color-800x800.png" alt="Unit 02 Moog Sub 37 Color E-Ink Badge" />
+        </div>
+      </div>
+      <div class="dl-group">
+        <div class="dl-label">1-Click Download (3-Color E-Ink)</div>
+        <div class="dl-row">
+          <a class="btn btn-primary" href="./unit2-moog-sub37-bass-color-200x200.png" download>200×200 PNG</a>
+          <a class="btn" href="./unit2-moog-sub37-bass-color-800x800.png" download>800×800 PNG</a>
+          <a class="btn" href="./unit2-moog-sub37-bass-color.svg" download>Vector SVG</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unit 3 Color -->
+    <div class="card">
+      <div class="card-header">
+        <span class="unit-id">UNIT 03 // CH 04</span>
+        <span class="unit-role">PROPHET-6 + VOLCA LEAD</span>
+      </div>
+      <div class="preview-stage">
+        <div class="keyring-bezel">
+          <img src="./unit3-prophet6-volca-lead-color-800x800.png" alt="Unit 03 Prophet-6 Volca Color E-Ink Badge" />
+        </div>
+      </div>
+      <div class="dl-group">
+        <div class="dl-label">1-Click Download (3-Color E-Ink)</div>
+        <div class="dl-row">
+          <a class="btn btn-primary" href="./unit3-prophet6-volca-lead-color-200x200.png" download>200×200 PNG</a>
+          <a class="btn" href="./unit3-prophet6-volca-lead-color-800x800.png" download>800×800 PNG</a>
+          <a class="btn" href="./unit3-prophet6-volca-lead-color.svg" download>Vector SVG</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unit 4 Color -->
+    <div class="card">
+      <div class="card-header">
+        <span class="unit-id">UNIT 04 // CH 05</span>
+        <span class="unit-role">MINILOGUE + KRONOS PADS</span>
+      </div>
+      <div class="preview-stage">
+        <div class="keyring-bezel">
+          <img src="./unit4-minilogue-kronos-pads-color-800x800.png" alt="Unit 04 Minilogue Kronos Color E-Ink Badge" />
+        </div>
+      </div>
+      <div class="dl-group">
+        <div class="dl-label">1-Click Download (3-Color E-Ink)</div>
+        <div class="dl-row">
+          <a class="btn btn-primary" href="./unit4-minilogue-kronos-pads-color-200x200.png" download>200×200 PNG</a>
+          <a class="btn" href="./unit4-minilogue-kronos-pads-color-800x800.png" download>800×800 PNG</a>
+          <a class="btn" href="./unit4-minilogue-kronos-pads-color.svg" download>Vector SVG</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <span class="dot" style="background:#ffffff;"></span>
+    B. Pure 1-Bit Monochrome E-Ink Palette (#000000 / #FFFFFF)
+  </div>
+  <div class="grid">
+    <!-- Unit 1 BW -->
+    <div class="card">
+      <div class="card-header">
+        <span class="unit-id">UNIT 01 // CH 10</span>
+        <span class="unit-role">1-BIT MONOCHROME</span>
+      </div>
+      <div class="preview-stage">
+        <div class="keyring-bezel">
+          <img src="./unit1-sp404-ep40-drums-bw-800x800.png" alt="Unit 01 SP-404 / EP-40 BW E-Ink Badge" />
+        </div>
+      </div>
+      <div class="dl-group">
+        <div class="dl-label">1-Click Download (1-Bit B&amp;W)</div>
+        <div class="dl-row">
+          <a class="btn" href="./unit1-sp404-ep40-drums-bw-200x200.png" download>200×200 PNG</a>
+          <a class="btn" href="./unit1-sp404-ep40-drums-bw-800x800.png" download>800×800 PNG</a>
+          <a class="btn" href="./unit1-sp404-ep40-drums-bw.svg" download>Vector SVG</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unit 2 BW -->
+    <div class="card">
+      <div class="card-header">
+        <span class="unit-id">UNIT 02 // CH 02-03</span>
+        <span class="unit-role">1-BIT MONOCHROME</span>
+      </div>
+      <div class="preview-stage">
+        <div class="keyring-bezel">
+          <img src="./unit2-moog-sub37-bass-bw-800x800.png" alt="Unit 02 Moog Sub 37 BW E-Ink Badge" />
+        </div>
+      </div>
+      <div class="dl-group">
+        <div class="dl-label">1-Click Download (1-Bit B&amp;W)</div>
+        <div class="dl-row">
+          <a class="btn" href="./unit2-moog-sub37-bass-bw-200x200.png" download>200×200 PNG</a>
+          <a class="btn" href="./unit2-moog-sub37-bass-bw-800x800.png" download>800×800 PNG</a>
+          <a class="btn" href="./unit2-moog-sub37-bass-bw.svg" download>Vector SVG</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unit 3 BW -->
+    <div class="card">
+      <div class="card-header">
+        <span class="unit-id">UNIT 03 // CH 04</span>
+        <span class="unit-role">1-BIT MONOCHROME</span>
+      </div>
+      <div class="preview-stage">
+        <div class="keyring-bezel">
+          <img src="./unit3-prophet6-volca-lead-bw-800x800.png" alt="Unit 03 Prophet-6 Volca BW E-Ink Badge" />
+        </div>
+      </div>
+      <div class="dl-group">
+        <div class="dl-label">1-Click Download (1-Bit B&amp;W)</div>
+        <div class="dl-row">
+          <a class="btn" href="./unit3-prophet6-volca-lead-bw-200x200.png" download>200×200 PNG</a>
+          <a class="btn" href="./unit3-prophet6-volca-lead-bw-800x800.png" download>800×800 PNG</a>
+          <a class="btn" href="./unit3-prophet6-volca-lead-bw.svg" download>Vector SVG</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unit 4 BW -->
+    <div class="card">
+      <div class="card-header">
+        <span class="unit-id">UNIT 04 // CH 05</span>
+        <span class="unit-role">1-BIT MONOCHROME</span>
+      </div>
+      <div class="preview-stage">
+        <div class="keyring-bezel">
+          <img src="./unit4-minilogue-kronos-pads-bw-800x800.png" alt="Unit 04 Minilogue Kronos BW E-Ink Badge" />
+        </div>
+      </div>
+      <div class="dl-group">
+        <div class="dl-label">1-Click Download (1-Bit B&amp;W)</div>
+        <div class="dl-row">
+          <a class="btn" href="./unit4-minilogue-kronos-pads-bw-200x200.png" download>200×200 PNG</a>
+          <a class="btn" href="./unit4-minilogue-kronos-pads-bw-800x800.png" download>800×800 PNG</a>
+          <a class="btn" href="./unit4-minilogue-kronos-pads-bw.svg" download>Vector SVG</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-box">
+    <div class="card-header">
+      <span class="unit-id">COMBINED 2×2 CONTACT SHEET</span>
+      <a class="btn btn-primary" href="./all-4-eink-badges-sheet.png" download="all-4-eink-badges-sheet.png">⬇ Download all-4-eink-badges-sheet.png</a>
+    </div>
+    <img src="./all-4-eink-badges-sheet.png" alt="All 4 E-Ink Badges Combined 2x2 Sheet" />
+  </div>
+</body>
+</html>

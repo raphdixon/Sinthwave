@@ -1,0 +1,23 @@
+{
+  "name": "sinthwave-pi-studio",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-08",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SET_DIRECTOR_DO",
+        "class_name": "StudioSetDirector"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["StudioSetDirector"]
+    }
+  ]
+}

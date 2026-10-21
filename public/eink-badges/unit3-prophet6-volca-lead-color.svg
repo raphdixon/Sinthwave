@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="800" height="800" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">
+  <defs>
+    <style>
+      .f-mono { font-family: 'SF Mono', 'Menlo', 'Consolas', 'Courier New', monospace; font-weight: 900; }
+      .f-sans { font-family: 'Arial Black', 'Impact', 'SF Pro Display', 'Helvetica Neue', sans-serif; font-weight: 900; }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="200" height="200" fill="#FFFFFF"/>
+  <rect x="3" y="3" width="194" height="194" rx="6" fill="none" stroke="#000000" stroke-width="4"/>
+
+  <!-- Top Header Block -->
+  <rect x="3" y="3" width="194" height="29" rx="4" fill="#000000"/>
+  <rect x="3" y="20" width="194" height="12" fill="#000000"/>
+  <text x="11" y="22" class="f-mono" font-size="13" fill="#FFFFFF" letter-spacing="0.5">UNIT 03 // CH 04</text>
+  <rect x="156" y="7" width="35" height="20" rx="3" fill="#E63900"/>
+  <text x="173.5" y="21" class="f-mono" font-size="12" fill="#FFFFFF" text-anchor="middle">P-6</text>
+
+  <!-- Center Illustration Zone (y=32..111) -->
+  <!-- Left Top: Arpeggio Step Bar -->
+  <rect x="10" y="35" width="105" height="12" rx="2" fill="#000000"/>
+  <text x="15" y="44" class="f-mono" font-size="8.5" fill="#FFFFFF">ARP</text>
+  <polyline points="42,44 52,38 62,44 72,38 82,44 92,38 102,44" fill="none" stroke="#E63900" stroke-width="2"/>
+
+  <!-- Left Bottom: 5-Octave Lead Keyboard Motif -->
+  <rect x="10" y="51" width="15" height="54" fill="#FFFFFF" stroke="#000000" stroke-width="2.2"/><circle cx="17.5" cy="95" r="3.5" fill="#E63900"/><rect x="25" y="51" width="15" height="54" fill="#FFFFFF" stroke="#000000" stroke-width="2.2"/><rect x="40" y="51" width="15" height="54" fill="#FFFFFF" stroke="#000000" stroke-width="2.2"/><circle cx="47.5" cy="95" r="3.5" fill="#000000"/><rect x="55" y="51" width="15" height="54" fill="#FFFFFF" stroke="#000000" stroke-width="2.2"/><rect x="70" y="51" width="15" height="54" fill="#FFFFFF" stroke="#000000" stroke-width="2.2"/><circle cx="77.5" cy="95" r="3.5" fill="#E63900"/><rect x="85" y="51" width="15" height="54" fill="#FFFFFF" stroke="#000000" stroke-width="2.2"/><rect x="100" y="51" width="15" height="54" fill="#FFFFFF" stroke="#000000" stroke-width="2.2"/><circle cx="107.5" cy="95" r="3.5" fill="#000000"/>
+  <rect x="20" y="51" width="10" height="32" rx="1" fill="#000000" stroke="#000000" stroke-width="1.5"/><rect x="35" y="51" width="10" height="32" rx="1" fill="#000000" stroke="#000000" stroke-width="1.5"/><rect x="65" y="51" width="10" height="32" rx="1" fill="#E63900" stroke="#000000" stroke-width="1.5"/><rect x="80" y="51" width="10" height="32" rx="1" fill="#000000" stroke="#000000" stroke-width="1.5"/><rect x="95" y="51" width="10" height="32" rx="1" fill="#000000" stroke="#000000" stroke-width="1.5"/>
+
+  <!-- Right: FM 4-Operator Modulation Diamond (cx=156, cy=70) -->
+  <polygon points="156,42 181,70 156,98 131,70" fill="none" stroke="#E63900" stroke-width="3"/>
+  <line x1="156" y1="42" x2="156" y2="98" stroke="#000000" stroke-width="2" stroke-dasharray="3 2"/>
+  <!-- Top Operator OP1 -->
+  <rect x="146" y="35" width="20" height="16" rx="2" fill="#000000"/>
+  <text x="156" y="46.5" class="f-mono" font-size="9.5" fill="#FFFFFF" text-anchor="middle">M1</text>
+  <!-- Left Operator OP2 -->
+  <rect x="122" y="62" width="20" height="16" rx="2" fill="#FFFFFF" stroke="#000000" stroke-width="2.5"/>
+  <text x="132" y="73.5" class="f-mono" font-size="9.5" fill="#000000" text-anchor="middle">M2</text>
+  <!-- Right Operator OP3 -->
+  <rect x="170" y="62" width="20" height="16" rx="2" fill="#FFFFFF" stroke="#000000" stroke-width="2.5"/>
+  <text x="180" y="73.5" class="f-mono" font-size="9.5" fill="#000000" text-anchor="middle">M3</text>
+  <!-- Bottom Carrier Operator OP4 -->
+  <rect x="146" y="90" width="20" height="16" rx="2" fill="#E63900"/>
+  <text x="156" y="101.5" class="f-mono" font-size="9.5" fill="#FFFFFF" text-anchor="middle">C1</text>
+
+  <!-- Horizontal Divider -->
+  <line x1="3" y1="111" x2="197" y2="111" stroke="#000000" stroke-width="3.5"/>
+
+  <!-- Bottom Typography Stack (Main Title + Secondary Title + Subtitle) -->
+  <text x="100" y="138" class="f-sans" font-size="22" fill="#000000" text-anchor="middle" letter-spacing="0.2">PROPHET-6</text>
+
+  <!-- Secondary Title Row -->
+  <line x1="10" y1="154.5" x2="26" y2="154.5" stroke="#E63900" stroke-width="3.5"/>
+  <text x="100" y="159" class="f-mono" font-size="13" fill="#E63900" text-anchor="middle" letter-spacing="0.6">VOLCA FM / KEYS</text>
+  <line x1="174" y1="154.5" x2="190" y2="154.5" stroke="#E63900" stroke-width="3.5"/>
+
+  <!-- Subtitle Pill -->
+  <rect x="9" y="167" width="182" height="22" rx="4" fill="#E63900"/>
+  <text x="100" y="182.5" class="f-mono" font-size="13.5" fill="#FFFFFF" text-anchor="middle" letter-spacing="1.2">ANALOG + DX LEAD</text>
+</svg>

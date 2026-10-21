@@ -1,0 +1,9 @@
+# Raspberry Pi OS images (multi-GB, exceed GitHub limits)
+*.img
+*.img.xz
+.DS_Store
+__pycache__/
+.wrangler/
+node_modules/
+.dev.vars
+.env*

@@ -6,22 +6,17 @@ It runs 100% digitally out-of-the-box (via a built-in 48kHz WebAudio Analog-Mode
 
 ---
 
-## Key Features
+## Key Features (4-Synth Hardware & Raspberry Pi Rig)
 
-- **5 Dedicated Synthesizer Channels**:
-  - **Unit 01 (`Ch 10`)**: **TR-808 / TR-909 Rhythm Computer** (Kick, Snare, Clap, Rim, Closed/Open Hats, Ride)
-  - **Unit 02 (`Ch 2`)**: **Roland TB-303 Acid Bassline** (18dB/oct resonant diode ladder, Slide, Accent, Overdrive)
-  - **Unit 03 (`Ch 3`)**: **Moog Model D / Little Phatty Sub Bass** (Triple VCO + 24dB/oct Transistor Ladder)
-  - **Unit 04 (`Ch 4`)**: **Sequential Prophet-5 / Analog Lead** (Poly/Mono Lead + LFO Mod)
-  - **Unit 05 (`Ch 5`)**: **Roland Juno-60 / Yamaha CS-80 Lush Poly Pads** (4-Voice Chord Voicings + BBD Stereo Chorus)
+- **4 Dedicated Hardware Synthesizer & Sampler Channels**:
+  - **Unit 01 (`Ch 10` — `AETHER-Pi1-SP404-EP40`)**: **Roland SP-404MKII / Teenage Engineering EP-40 Sampler** (6 Sample/Drum Pads + MFX / DJFX / Isolator CCs; includes dedicated `LIMITED CC MAPPING` mode for Teenage Engineering EP-40)
+  - **Unit 02 (`Ch 2–3` — `AETHER-Pi2-MoogSub37`)**: **Moog Sub 37 Analog Bass** (Ladder Filter Cutoff `CC 19`, Resonance `CC 21`, EG Contour `CC 22`, Decay `CC 23`, Multidrive `CC 18` + Sub Osc `CC 114`, Glide `CC 5` + Legato Slide & Accent)
+  - **Unit 03 (`Ch 4` — `AETHER-Pi3-Prophet6-Volca`)**: **Sequential Prophet-6 / Korg Volca FM / Korg Volca Keys Lead & Arp** (Switchable hardware CC profiles for Prophet-6 `CC 102/103/104/62/68`, Volca FM `CC 44/45/49/43/47/41`, and Volca Keys `CC 44/42/46/52/53/11`)
+  - **Unit 04 (`Ch 5` — `AETHER-Pi4-Minilogue-Kronos`)**: **Korg Minilogue / Korg Kronos 4-Voice Polyphonic Chords & Pads** (Switchable hardware CC profiles for Korg Minilogue `CC 43/44/45/16/19/29/30/31`, Korg Kronos `CC 74/93/71/73/72/91/7`, and Prophet-6 Poly Chords)
 - **Dynamic Section-Based Voice Staging (`activeVoices`)**:
-  - Never plays all 5 synths non-stop. Stages **2 to 4 synths per section** (`INTRO` → `GROOVE` → `TENSION BUILD` → `PEAK EUPHORIA` → `DUB BREAKDOWN` → `OUTRO`).
-  - **Strict TB-303 Acid Restraint (`acidPolicy`)**: Keeps the 303 Acid resting (`AI RESTING`) in non-acid genres and during Intros/Grooves/Breakdowns so it never gets fatiguing, dropping it in only for Builds/Peaks or when explicitly requested (with a manual **`PIN`** override button on every unit).
+  - Stages **2 to 4 synths per section** (`INTRO` → `GROOVE` → `TENSION BUILD` → `PEAK EUPHORIA` → `DUB BREAKDOWN`) with manual **`PIN`** override on every unit.
 - **Hybrid AI Conductor (`gemini-flash-latest` & `gemini-flash-lite-latest` + Local Symbolic Theory Engine v2)**:
-  - Uses **`gemini-flash-latest`** and **`gemini-flash-lite-latest`** for natural-language prompt interpretation, voice staging, MIDI Program Change (`0xC0`) patch selection, and continuous MIDI CC (`0xB0`) parameter morphing, paired with a `<1ms` local Symbolic Music Theory Engine so the 16-step clock never drops a beat.
-- **Pre-Mapped Factory MIDI CC Profiles**:
-  - Includes exact factory CC maps extracted from **Arturia V Collection** (`Acid V`, `Mini V4`, `Prophet-5 V`, `Jun-6 V`, `Jup-8 V4`, `CS-80 V4`) alongside hardware synth CC profiles (`Moog Little Phatty`, `Moog Minitaur`, `Sequential Prophet '08 / Rev2`, `Korg Minilogue XD`, `Roland TB-03`, `Roland TR-8S`, `Roland JU-06A`).
-
+  - Uses **`gemini-flash-latest`** and **`gemini-flash-lite-latest`** for natural-language prompt interpretation, voice staging, MIDI Program Change (`0xC0`), and continuous MIDI CC (`0xB0`) parameter morphing, paired with a `<1ms` local Symbolic Music Theory Engine.
 ---
 
 ## Quick Start (Host Computer)

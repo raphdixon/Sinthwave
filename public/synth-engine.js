@@ -414,12 +414,12 @@ function buildDubTechnoGraph(ctx, params) {
   const fbHpf = ctx.createBiquadFilter();
   fbHpf.type = 'highpass';
   fbHpf.frequency.value = 235; // Strips sub-mud on every repeat
-  fbHpf.Q.value = 0.65;        // Sub-Butterworth: strictly zero resonant peak!
+  fbHpf.Q.value = -3.01;       // WebAudio LP/HP Q is in dB: -3.01 dB = Butterworth, peak gain exactly 1.0 (no resonance)
 
   const fbLpf = ctx.createBiquadFilter();
   fbLpf.type = 'lowpass';
   fbLpf.frequency.value = params.delayFilterHz ?? 1450; // Repeats melt into warm dark wool
-  fbLpf.Q.value = 0.65;        // Sub-Butterworth: strictly zero resonant peak!
+  fbLpf.Q.value = -3.01;       // Butterworth (dB units): positive values here resonate and push loop gain > 1
 
   const fbTapeSat = ctx.createWaveShaper();
   fbTapeSat.curve = makeTapeSaturationCurve(1.4);
@@ -492,7 +492,7 @@ function buildDubTechnoGraph(ctx, params) {
     const cDamp = ctx.createBiquadFilter();
     cDamp.type = 'lowpass';
     cDamp.frequency.value = 2150 - cIdx * 150;
-    cDamp.Q.value = 0.6;
+    cDamp.Q.value = -3.01; // Butterworth (dB units). Q=0.6 dB peaked at x1.21 -> comb loop gain 1.08 -> runaway ring
     const cFb = ctx.createGain();
     cFb.gain.value = 0.89;
     ap2.connect(cDelay);

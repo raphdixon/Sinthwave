@@ -25,13 +25,25 @@ kCFStringEncodingUTF8 = 0x08000100
 
 
 class NativeCoreMIDIBridge:
+    # Loopback / virtual endpoints that should stay OFF by default to prevent MIDI feedback loops;
+    # all real USB / physical MIDI hardware destinations auto-enable immediately (including hot-plug!).
+    DEFAULT_DISABLED_SUBSTRINGS = (
+        "iac driver",
+        "network",
+        "bluetooth",
+        "aether //",
+        "arturia //",
+    )
+
     def __init__(self):
         self.lock = threading.Lock()
         self.available = False
         self.virtual_sources = {}
-        self.selected_hw_destinations = []
+        self.disabled_hw_names = set()
+        self.enabled_override_names = set()
         self.tx_message_count = 0
         self.last_midi_events = []
+        self.ca = None
 
         self.port_names = {
             0: "ARTURIA // Master Bus (All Ch)",
@@ -44,6 +56,14 @@ class NativeCoreMIDIBridge:
         try:
             self.cm = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/CoreMIDI.framework/CoreMIDI")
             self.cf = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")
+            try:
+                self.ca = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/CoreAudio.framework/CoreAudio")
+                self.ca.AudioGetCurrentHostTime.restype = ctypes.c_uint64
+                self.ca.AudioGetCurrentHostTime.argtypes = []
+                self.ca.AudioConvertNanosToHostTime.restype = ctypes.c_uint64
+                self.ca.AudioConvertNanosToHostTime.argtypes = [ctypes.c_uint64]
+            except Exception:
+                self.ca = None
 
             self.cf.CFStringCreateWithCString.restype = ctypes.c_void_p
             self.cf.CFStringCreateWithCString.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_uint32]
@@ -51,6 +71,23 @@ class NativeCoreMIDIBridge:
             self.cf.CFStringGetCString.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_long, ctypes.c_uint32]
             self.cf.CFRunLoopRunInMode.argtypes = [ctypes.c_void_p, ctypes.c_double, ctypes.c_bool]
             self.cf.CFRunLoopRunInMode.restype = ctypes.c_int32
+
+            self.cm.MIDIClientCreate.restype = ctypes.c_int32
+            self.cm.MIDIClientCreate.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32)]
+            self.cm.MIDIOutputPortCreate.restype = ctypes.c_int32
+            self.cm.MIDIOutputPortCreate.argtypes = [ctypes.c_uint32, ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32)]
+            self.cm.MIDISourceCreate.restype = ctypes.c_int32
+            self.cm.MIDISourceCreate.argtypes = [ctypes.c_uint32, ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32)]
+            self.cm.MIDIGetNumberOfDestinations.restype = ctypes.c_size_t
+            self.cm.MIDIGetNumberOfDestinations.argtypes = []
+            self.cm.MIDIGetDestination.restype = ctypes.c_uint32
+            self.cm.MIDIGetDestination.argtypes = [ctypes.c_size_t]
+            self.cm.MIDIObjectGetStringProperty.restype = ctypes.c_int32
+            self.cm.MIDIObjectGetStringProperty.argtypes = [ctypes.c_uint32, ctypes.c_void_p, ctypes.POINTER(ctypes.c_void_p)]
+            self.cm.MIDISend.restype = ctypes.c_int32
+            self.cm.MIDISend.argtypes = [ctypes.c_uint32, ctypes.c_uint32, ctypes.c_void_p]
+            self.cm.MIDIReceived.restype = ctypes.c_int32
+            self.cm.MIDIReceived.argtypes = [ctypes.c_uint32, ctypes.c_void_p]
 
             self.cm.MIDIPacketListInit.restype = ctypes.c_void_p
             self.cm.MIDIPacketListInit.argtypes = [ctypes.c_void_p]
@@ -69,17 +106,56 @@ class NativeCoreMIDIBridge:
             self.prop_display_name = self._cfstr("displayName")
             self.prop_name = self._cfstr("name")
             err1 = self.cm.MIDIClientCreate(self._cfstr("AETHER-909 AI Studio"), None, None, ctypes.byref(self.client))
-            err2 = self.cm.MIDIOutputPortCreate(self.client, self._cfstr("AETHER-909 Out"), ctypes.byref(self.out_port))
+            err2 = self.cm.MIDIOutputPortCreate(self.client.value, self._cfstr("AETHER-909 Out"), ctypes.byref(self.out_port))
             for pid, name in sorted(self.port_names.items()):
                 endpoint = ctypes.c_uint32()
-                err = self.cm.MIDISourceCreate(self.client, self._cfstr(name), ctypes.byref(endpoint))
+                err = self.cm.MIDISourceCreate(self.client.value, self._cfstr(name), ctypes.byref(endpoint))
                 if err == 0:
                     self.virtual_sources[pid] = endpoint
             self.available = (err1 == 0 and err2 == 0)
             self._runloop_mode = ctypes.c_void_p.in_dll(self.cf, "kCFRunLoopDefaultMode")
-            print(f"[CoreMIDI] Initialized successfully. Created {len(self.virtual_sources)} virtual MIDI ports.")
+            usb_now = [d["name"] for d in self._list_destinations_unlocked() if d["enabled"]]
+            print(f"[CoreMIDI] Initialized successfully. Auto-routed USB MIDI destinations: {usb_now}")
         except Exception as e:
             print(f"[CoreMIDI] Initialization warning: {e}", file=sys.stderr)
+
+    def _is_dest_enabled_by_name(self, name: str) -> bool:
+        if name in self.disabled_hw_names:
+            return False
+        if name in self.enabled_override_names:
+            return True
+        low = name.lower()
+        if any(sub in low for sub in self.DEFAULT_DISABLED_SUBSTRINGS):
+            return False
+        return True
+
+    def toggle_destination_by_index(self, idx: int):
+        with self.lock:
+            dests = self._list_destinations_unlocked()
+            target = next((d for d in dests if d["index"] == idx), None)
+            if not target:
+                return
+            name = target["name"]
+            if target["enabled"]:
+                self.disabled_hw_names.add(name)
+                self.enabled_override_names.discard(name)
+            else:
+                self.disabled_hw_names.discard(name)
+                self.enabled_override_names.add(name)
+
+    @property
+    def selected_hw_destinations(self):
+        return [d["index"] for d in self.list_destinations() if d["enabled"]]
+
+    def _compute_timestamp(self, delay_ms: float) -> int:
+        if not self.ca or delay_ms <= 0:
+            return 0
+        try:
+            now_ht = self.ca.AudioGetCurrentHostTime()
+            delta_ht = self.ca.AudioConvertNanosToHostTime(int(delay_ms * 1_000_000))
+            return int(now_ht + delta_ht)
+        except Exception:
+            return 0
 
     def pump_main_runloop(self):
         if not self.available:
@@ -115,10 +191,12 @@ class NativeCoreMIDIBridge:
                     name = buf.value.decode("utf-8", errors="replace")
             if name == "AETHER-Pi4-ProphetLead":
                 name = "AETHER-Pi4-Minilogue-Kronos"
+            is_usb_hw = not any(sub in name.lower() for sub in self.DEFAULT_DISABLED_SUBSTRINGS)
             result.append({
                 "index": i,
                 "name": name,
-                "enabled": i in self.selected_hw_destinations,
+                "isHardware": is_usb_hw,
+                "enabled": self._is_dest_enabled_by_name(name),
             })
         return result
 
@@ -173,25 +251,27 @@ class NativeCoreMIDIBridge:
                 if not raw_bytes:
                     continue
                 port_id = int(ev.get("port", 0))
+                delay_ms = float(ev.get("delayMs", 0.0) or 0.0)
+                ts = self._compute_timestamp(delay_ms)
                 msg = bytes(int(b) & 0xFF for b in raw_bytes)
 
                 pkt = self.cm.MIDIPacketListInit(pkt_buf)
-                pkt = self.cm.MIDIPacketListAdd(pkt_buf, 512, pkt, 0, len(msg), msg)
+                pkt = self.cm.MIDIPacketListAdd(pkt_buf, 512, pkt, ts, len(msg), msg)
                 if not pkt:
                     continue
 
                 # 1. Broadcast on instrument-specific virtual source
                 if port_id in self.virtual_sources:
-                    self.cm.MIDIReceived(self.virtual_sources[port_id], pkt_buf)
+                    self.cm.MIDIReceived(self.virtual_sources[port_id].value, pkt_buf)
 
                 # 2. Mirror to Master Bus virtual source (port 0)
                 if port_id != 0 and 0 in self.virtual_sources:
-                    self.cm.MIDIReceived(self.virtual_sources[0], pkt_buf)
+                    self.cm.MIDIReceived(self.virtual_sources[0].value, pkt_buf)
 
                 # 3. Send ONLY to the matching physical Pi / enabled hardware destination
                 for dest_name, dest_ep in active_dests:
                     if self._dest_matches_port(dest_name, port_id):
-                        self.cm.MIDISend(self.out_port, dest_ep, pkt_buf)
+                        self.cm.MIDISend(self.out_port.value, dest_ep, pkt_buf)
 
                 sent += 1
                 self.tx_message_count += 1
@@ -871,8 +951,9 @@ def call_gemini_audio_ear_refine(body: dict) -> dict:
                 val = min(38, raw_val)  # Cap Arturia Delay Wet safely <= 30%
             else:
                 val = raw_val
-            for unit_id in (1, 2, 3, 4):
-                midi_events.append({"unit": unit_id, "status": 0xB0, "d1": cc_num, "d2": val})
+            unit_ch_map = {1: 9, 2: 2, 3: 3, 4: 4}
+            for unit_id, ch in unit_ch_map.items():
+                midi_events.append({"port": unit_id, "bytes": [0xB0 | ch, cc_num, val]})
     sent_ccs = midi_bridge.send_batch(midi_events) if midi_events else 0
 
     return {
@@ -906,12 +987,15 @@ class StudioRequestHandler(SimpleHTTPRequestHandler):
             return
         super().log_message(format, *args)
 
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store, max-age=0")
+        super().end_headers()
+
     def _send_json(self, data: dict, status: int = 200):
         raw = json.dumps(data).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(raw)))
-        self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(raw)
 
@@ -959,10 +1043,7 @@ class StudioRequestHandler(SimpleHTTPRequestHandler):
             elif action == "toggle_dest":
                 idx = int(body.get("index", -1))
                 if idx >= 0:
-                    if idx in midi_bridge.selected_hw_destinations:
-                        midi_bridge.selected_hw_destinations.remove(idx)
-                    else:
-                        midi_bridge.selected_hw_destinations.append(idx)
+                    midi_bridge.toggle_destination_by_index(idx)
             self._send_json({
                 "ok": True,
                 "hardwareDestinations": midi_bridge.list_destinations(),

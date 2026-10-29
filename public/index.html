@@ -35,14 +35,19 @@
           </div>
         </div>
 
-        <!-- Dedicated Arturia V Collection 11 Pro Controls -->
+        <!-- USB Hardware MIDI vs Local DSP / Arturia Output Mode -->
         <div class="rams-studio-mode-cluster">
-          <span class="mode-label">ARTURIA V COLLECTION 11 PRO //</span>
-          <button id="btn-launch-arturia-all" type="button" class="te-btn-launch-all" title="Launch Mini V4 + Prophet-5 V + Jun-6 V Standalone Apps">
-            ↗ OPEN ALL ARTURIA SYNTHS
+          <div class="mode-toggle-group">
+            <button id="btn-mode-hardware" type="button" class="mode-pill active">USB MIDI</button>
+            <button id="btn-mode-mac-dsp" type="button" class="mode-pill">USB + MAC DSP</button>
+            <button id="btn-mode-arturia" type="button" class="mode-pill">ARTURIA</button>
+          </div>
+          <span id="usb-hw-count-badge" class="mode-label">USB SCANNING</span>
+          <button id="btn-launch-arturia-all" type="button" class="te-btn-launch-all" style="display:none;" title="Launch Mini V4 + Prophet-5 V + Jun-6 V Standalone Apps">
+            ↗ OPEN ARTURIA
           </button>
-          <button id="btn-open-guide-modal" type="button" class="te-btn-guide" title="View Auto-Configured Arturia CoreMIDI Routing">
-            ROUTING INFO
+          <button id="btn-open-guide-modal" type="button" class="te-btn-guide" style="display:none;" title="View Auto-Configured Arturia CoreMIDI Routing">
+            ROUTING
           </button>
         </div>
 
@@ -135,8 +140,8 @@
               <span id="title-drums">SYNTH 1 (DRUMS)</span>
             </span>
             <span class="mod-title-right">
-              <span class="hw-slot-subtitle" style="display:none;">SP-404 / TE EP-40 Sampler</span>
-              <span class="arturia-slot-controls">
+              <span class="hw-slot-subtitle">SP-404 / TE EP-40 · USB Pi 1</span>
+              <span class="arturia-slot-controls" style="display:none;">
                 <select class="te-card-synth-select" data-synth-select="drums" aria-label="Unit 1 Arturia Sampler">
                   <option value="emulator_ii" selected>Built-In DSP + Emulator II V</option>
                   <option value="cmi_v">Built-In DSP + Fairlight CMI V</option>
@@ -216,8 +221,8 @@
               <span id="title-moog">SYNTH 2 (MOOG BASS)</span>
             </span>
             <span class="mod-title-right">
-              <span class="hw-slot-subtitle" style="display:none;">Moog Sub 37 Tribute</span>
-              <span class="arturia-slot-controls">
+              <span class="hw-slot-subtitle">Moog Sub 37 · USB Pi 2</span>
+              <span class="arturia-slot-controls" style="display:none;">
                 <select class="te-card-synth-select" data-synth-select="moog" aria-label="Unit 2 Arturia Bass Synth">
                   <option value="mini_v" selected>Arturia Mini V4 (Moog Model D)</option>
                   <option value="acid_v">Arturia Acid V (TB-303 Bass)</option>
@@ -244,8 +249,8 @@
               <span id="title-lead">SYNTH 3 (LEAD / FM)</span>
             </span>
             <span class="mod-title-right">
-              <span class="hw-slot-subtitle" style="display:none;">Sequential Prophet-6 / Korg Volca FM</span>
-              <span class="arturia-slot-controls">
+              <span class="hw-slot-subtitle">Prophet-6 / Volca · USB Pi 3</span>
+              <span class="arturia-slot-controls" style="display:none;">
                 <select class="te-card-synth-select" data-synth-select="lead" aria-label="Unit 3 Arturia Lead Synth">
                   <option value="prophet_v" selected>Arturia Prophet-5 V (Prophet-6 Match)</option>
                   <option value="dx7_v">Arturia DX7 V (Volca FM Match)</option>
@@ -338,8 +343,8 @@
               <span id="title-pads">SYNTH 4 (POLY PADS)</span>
             </span>
             <span class="mod-title-right">
-              <span class="hw-slot-subtitle" style="display:none;">Korg Minilogue / Korg Kronos</span>
-              <span class="arturia-slot-controls">
+              <span class="hw-slot-subtitle">Minilogue / Kronos · USB Pi 4</span>
+              <span class="arturia-slot-controls" style="display:none;">
                 <select class="te-card-synth-select" data-synth-select="pads" aria-label="Unit 4 Arturia Poly Pads Synth">
                   <option value="jun6_v" selected>Arturia Jun-6 V (Minilogue Match)</option>
                   <option value="cs80_v">Arturia CS-80 V4 (Kronos Match)</option>
@@ -532,7 +537,7 @@
           <div class="led-indicator">
             <span>MIDI TX: <strong id="tx-count-val">0</strong></span>
           </div>
-          <button id="btn-mute-mac-dsp" type="button" class="hw-btn">MAC AUDIO: ON</button>
+          <button id="btn-mute-mac-dsp" type="button" class="hw-btn">MAC AUDIO: MUTED (USB ONLY)</button>
           <button id="btn-midi-learn-mode" type="button" class="hw-btn">CC LEARN SOLO</button>
           <button id="btn-export-midi" type="button" class="hw-btn">EXPORT .MID</button>
           <button id="btn-midi-panic" type="button" class="hw-btn">PANIC</button>
@@ -655,6 +660,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="/app.js"></script>
+  <script type="module" src="/app.js?v=usb2"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
  * AETHER-909 // Master Studio Sequencer, CoreMIDI + WebMIDI Dispatcher & UI Controller
  */
 
-import { AnalogStudioDSP } from './synth-engine.js';
+import { AnalogStudioDSP } from './synth-engine.js?v=usb2';
 import {
   AIConductorEngine,
   GENRE_CARTRIDGES,
@@ -49,7 +49,7 @@ const SYNTH_CC_PROFILES = {
       // CC19=Filter Cutoff, CC21=Filter Resonance, CC22=Filter EG Amount, CC23=Filter Decay (+CC12 Osc2 Beat), CC18=Multidrive (+CC114 Sub Osc), CC7=Volume
       name: 'Moog Sub 37 Hardware (Bass)',
       ccMap: { cutoff: 19, resonance: 21, contour: 22, detune: 23, sub: 18, level: 7 },
-      extraCCs: { detune: [12], sub: [114] },
+      extraCCs: { cutoff: [74], resonance: [71], detune: [12], sub: [114] },
     },
     korg_volca_keys_bass: {
       // Korg Volca Keys Hardware in Unison / Ring Bass Mode:
@@ -69,6 +69,7 @@ const SYNTH_CC_PROFILES = {
       // CC102=LPF Cutoff, CC103=LPF Resonance, CC104=LPF Env Amt, CC62=FX1 Delay Mix, CC68=FX2 Reverb Mix, CC7=Master Volume
       name: 'Sequential Prophet-6 Hardware',
       ccMap: { cutoff: 102, resonance: 103, lfoMod: 104, delaySend: 62, reverbSend: 68, level: 7 },
+      extraCCs: { cutoff: [74], resonance: [71], reverbSend: [91] },
     },
     korg_volca_fm: {
       // Korg Volca FM Hardware MIDI CC specification:
@@ -92,7 +93,7 @@ const SYNTH_CC_PROFILES = {
     korg_minilogue: {
       name: 'Korg Minilogue (4-Voice Analog Poly)',
       ccMap: { cutoff: 43, chorus: 44, attack: 16, release: 19, reverbSend: 29, level: 7 },
-      extraCCs: { chorus: [45], reverbSend: [30, 31] },
+      extraCCs: { cutoff: [74], chorus: [45, 71, 93], attack: [73], release: [72], reverbSend: [30, 31, 91] },
     },
     korg_kronos: {
       name: 'Korg Kronos Workstation Combi/Pads',
@@ -127,7 +128,7 @@ const state = {
   autoEvolveBars: 16, // 16 bars (~31s at 124 BPM) per section so Dub Techno movements genuinely breathe!
   activeCartridgeId: 'berlin_dub',
   prompt: GENRE_CARTRIDGES[0].prompt,
-  studioMode: 'arturia', // 'arturia' (Digital standalone synths) | 'hardware' (Physical Pis)
+  studioMode: 'hardware', // 'hardware' (USB MIDI only, Mac muted) | 'mac_dsp' (USB + Mac DSP) | 'arturia'
 
   currentStep: 0,
   currentBar: 1,
@@ -153,7 +154,7 @@ const state = {
     lead: true,
     pads: true,
   },
-  programs: { drums: 0, moog: 0, lead: 0, pads: 0 },
+  programs: { drums: 25, moog: 38, lead: 81, pads: 89 },
 
   // Per-Unit Routing, Active CC Profile & Mixer State (4-Unit Hardware Rig)
   units: {
@@ -161,7 +162,7 @@ const state = {
       mute: false,
       solo: false,
       pinned: false,
-      extOnly: false,
+      extOnly: true,
       profile: 'sp404',
       lastReadout: 'CH10 • READY',
       params: { punch: 0.75, decay: 0.58, snappy: 0.68, hatDecay: 0.42, drive: 0.48, level: 0.88 },
@@ -170,7 +171,7 @@ const state = {
       mute: false,
       solo: false,
       pinned: false,
-      extOnly: false,
+      extOnly: true,
       profile: 'moog_sub37',
       waveform: 'sawtooth',
       lastReadout: 'CH3 • READY',
@@ -180,7 +181,7 @@ const state = {
       mute: false,
       solo: false,
       pinned: false,
-      extOnly: false,
+      extOnly: true,
       profile: 'prophet_6',
       lastReadout: 'CH4 • READY',
       params: { cutoff: 0.62, resonance: 0.42, lfoMod: 0.38, delaySend: 0.58, reverbSend: 0.48, level: 0.76 },
@@ -189,7 +190,7 @@ const state = {
       mute: false,
       solo: false,
       pinned: false,
-      extOnly: false,
+      extOnly: true,
       profile: 'korg_minilogue',
       lastReadout: 'CH5 • READY',
       params: { cutoff: 0.56, chorus: 0.68, attack: 0.45, release: 0.62, reverbSend: 0.72, level: 0.78 },
@@ -302,17 +303,53 @@ function sendUnitParamCC(unitKey, paramKey, normVal) {
 let pendingMidiEvents = [];
 let flushTimer = null;
 
-function queueMidiEvent(portId, bytes, noteOffDelayMs = 0, noteOffBytes = null) {
-  pendingMidiEvents.push({ port: portId, bytes });
+function resolveUnitProgram(unitKey, rawProg) {
+  const n = Math.max(0, parseInt(rawProg ?? 0, 10) || 0);
+  if (state.studioMode === 'arturia') return n & 0x7F;
+  // Hardware / GM Synth banks for Raspberry Pi FluidSynth & external synths (avoids GM Program 0 Grand Piano!)
+  const hwBank = {
+    drums: [25, 25, 24, 25, 26], // TR-808 / Electronic Drum Kits
+    moog:  [38, 39, 38, 39, 87], // Synth Bass 1 / Synth Bass 2 / Bass+Lead
+    lead:  [81, 80, 81, 84, 81], // Lead 2 (Sawtooth) / Lead 1 (Square)
+    pads:  [89, 95, 88, 90, 92], // Pad 2 (Warm) / Pad 8 (Sweep) / Polysynth
+  };
+  const choices = hwBank[unitKey];
+  if (!choices) return n & 0x7F;
+  // Preserve already-valid GM synth patch numbers if explicitly chosen
+  if (unitKey === 'drums' && n >= 24 && n <= 32) return n;
+  if (unitKey === 'moog' && n >= 32 && n <= 40) return n;
+  if (unitKey === 'lead' && n >= 80 && n <= 87) return n;
+  if (unitKey === 'pads' && n >= 88 && n <= 95) return n;
+  return choices[n % choices.length];
+}
 
-  if (!flushTimer) {
-    flushTimer = setTimeout(flushMidiQueue, 6);
+function webMidiMatchesPort(destName, portId) {
+  if (!destName) return false;
+  const low = destName.toLowerCase();
+  if (low.includes('iac driver') || low.includes('aether //') || low.includes('arturia //') || low.includes('network')) {
+    return false;
   }
+  if (portId === 0) return true;
+  if (!low.includes('aether') && !low.includes('pi')) return true;
+  if (low.includes('pi1') || low.includes('sp404') || low.includes('drum')) return portId === 1;
+  if (low.includes('pi2') || low.includes('moog') || low.includes('sub37') || low.includes('acid')) return portId === 2;
+  if (low.includes('pi3') || low.includes('prophet') || low.includes('volca') || low.includes('lead')) return portId === 3;
+  if (low.includes('pi4') || low.includes('pi5') || low.includes('minilogue') || low.includes('kronos') || low.includes('pad')) return portId === 4;
+  return true;
+}
+
+function queueMidiEvent(portId, bytes, noteOffDelayMs = 0, noteOffBytes = null, stepTimeSec = null) {
+  const delayMs = (stepTimeSec !== null && dsp.ctx)
+    ? Math.max(0, Math.round((stepTimeSec - dsp.ctx.currentTime) * 1000))
+    : 0;
+  pendingMidiEvents.push({ port: portId, bytes, delayMs });
 
   if (noteOffDelayMs > 0 && noteOffBytes) {
-    setTimeout(() => {
-      queueMidiEvent(portId, noteOffBytes);
-    }, noteOffDelayMs);
+    pendingMidiEvents.push({ port: portId, bytes: noteOffBytes, delayMs: delayMs + Math.round(noteOffDelayMs) });
+  }
+
+  if (!flushTimer) {
+    flushTimer = setTimeout(flushMidiQueue, 4);
   }
 }
 
@@ -329,19 +366,40 @@ async function flushMidiQueue() {
     setTimeout(() => txDot.classList.remove('on-amber'), 65);
   }
 
-  try {
-    const res = await fetch('/api/midi/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ events: batch }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      state.txPacketCount = data.totalTx || (state.txPacketCount + batch.length);
-      const countEl = document.getElementById('tx-count-val');
-      if (countEl) countEl.textContent = String(state.txPacketCount);
+  let sentViaCoreMidi = false;
+  if (state.coreMidiStatus?.coreMidiAvailable !== false) {
+    try {
+      const res = await fetch('/api/midi/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: batch }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        sentViaCoreMidi = true;
+        state.txPacketCount = data.totalTx || (state.txPacketCount + batch.length);
+        const countEl = document.getElementById('tx-count-val');
+        if (countEl) countEl.textContent = String(state.txPacketCount);
+      }
+    } catch (_) {}
+  }
+
+  // Automatic direct WebMIDI USB fallback if native CoreMIDI server is unreachable
+  if (!sentViaCoreMidi && state.webMidiOutputs.length > 0) {
+    const nowPerf = window.performance.now();
+    for (const ev of batch) {
+      for (const out of state.webMidiOutputs) {
+        if (webMidiMatchesPort(out.name, ev.port)) {
+          try {
+            out.send(ev.bytes, nowPerf + (ev.delayMs || 0));
+          } catch (_) {}
+        }
+      }
     }
-  } catch (_) {}
+    state.txPacketCount += batch.length;
+    const countEl = document.getElementById('tx-count-val');
+    if (countEl) countEl.textContent = String(state.txPacketCount);
+  }
 }
 
 async function initWebMIDI() {
@@ -350,10 +408,32 @@ async function initWebMIDI() {
     const access = await navigator.requestMIDIAccess({ sysex: false });
     const updatePorts = () => {
       state.webMidiOutputs = Array.from(access.outputs.values());
+      updateUsbHeaderBadge();
     };
     access.onstatechange = updatePorts;
     updatePorts();
   } catch (_) {}
+}
+
+function updateUsbHeaderBadge() {
+  const badgeEl = document.getElementById('usb-hw-count-badge');
+  if (!badgeEl) return;
+  const hwDests = state.coreMidiStatus?.hardwareDestinations || [];
+  const activeUsb = hwDests.filter((d) => d.enabled && d.isHardware !== false);
+  if (activeUsb.length > 0) {
+    const shortNames = activeUsb.map((d) => d.name.replace(/^AETHER-/i, '').split('-')[0]);
+    badgeEl.textContent = `${activeUsb.length} USB ROUTED (${shortNames.join(' · ')})`;
+    badgeEl.style.color = '#15803d';
+  } else {
+    const webUsb = state.webMidiOutputs.filter((o) => webMidiMatchesPort(o.name, 0));
+    if (webUsb.length > 0) {
+      badgeEl.textContent = `${webUsb.length} WEBMIDI USB`;
+      badgeEl.style.color = '#15803d';
+    } else {
+      badgeEl.textContent = '0 USB DEVICES';
+      badgeEl.style.color = '#b91c1c';
+    }
+  }
 }
 
 async function fetchCoreMidiStatus() {
@@ -363,8 +443,12 @@ async function fetchCoreMidiStatus() {
     const data = await res.json();
     state.coreMidiStatus = data;
     state.txPacketCount = data.txMessageCount || state.txPacketCount;
+    updateUsbHeaderBadge();
     renderPatchbayAndApps();
-  } catch (_) {}
+  } catch (_) {
+    state.coreMidiStatus.coreMidiAvailable = false;
+    updateUsbHeaderBadge();
+  }
 }
 
 // ============================================================================
@@ -399,19 +483,24 @@ function startSequencer() {
 
   // Send MIDI Start (0xFA) + immediate Program Change & Volume CC7 to all 4 Pis
   queueMidiEvent(0, [0xFA]);
-  queueMidiEvent(1, [0xC9, (state.programs.drums ?? 25) & 0x7F]);
+  queueMidiEvent(1, [0xC9, resolveUnitProgram('drums', state.programs.drums)]);
   queueMidiEvent(1, [0xB9, 7, 127]);
-  queueMidiEvent(2, [0xC2, (state.programs.moog ?? 38) & 0x7F]);
+  queueMidiEvent(2, [0xC2, resolveUnitProgram('moog', state.programs.moog)]);
   queueMidiEvent(2, [0xB2, 7, 127]);
-  queueMidiEvent(3, [0xC3, (state.programs.lead ?? 81) & 0x7F]);
+  queueMidiEvent(3, [0xC3, resolveUnitProgram('lead', state.programs.lead)]);
   queueMidiEvent(3, [0xB3, 7, 127]);
-  queueMidiEvent(4, [0xC4, (state.programs.pads ?? 89) & 0x7F]);
+  queueMidiEvent(4, [0xC4, resolveUnitProgram('pads', state.programs.pads)]);
   queueMidiEvent(4, [0xB4, 7, 127]);
   const playBtn = document.getElementById('btn-play-toggle');
   if (playBtn) {
     playBtn.classList.add('active');
   }
-  addLog('AI', `Transport locked at ${state.bpm} BPM. Streaming Notes + Full-Synth MIDI CCs to CoreMIDI Virtual Bus + Internal DSP.`);
+  addLog(
+    'MIDI',
+    state.studioMode === 'hardware'
+      ? `Transport locked at ${state.bpm} BPM. Streaming Notes + MIDI CCs strictly over USB to connected hardware (Mac audio muted).`
+      : `Transport locked at ${state.bpm} BPM. Streaming Notes + Full-Synth MIDI CCs to USB + Internal DSP.`
+  );
 
   schedulerTimer = setInterval(schedulerTick, LOOKAHEAD_MS);
 }
@@ -508,14 +597,14 @@ function scheduleStep(stepIdx, stepTime) {
 
   // On every bar downbeat (step 0), send MIDI Program Change + CC7 Volume so newly connected/booted Pis lock patch immediately
   if (stepIdx === 0) {
-    queueMidiEvent(1, [0xC9, (state.programs.drums ?? 25) & 0x7F]);
-    queueMidiEvent(1, [0xB9, 7, 127]);
-    queueMidiEvent(2, [0xC2, (state.programs.moog ?? 38) & 0x7F]);
-    queueMidiEvent(2, [0xB2, 7, 127]);
-    queueMidiEvent(3, [0xC3, (state.programs.lead ?? 81) & 0x7F]);
-    queueMidiEvent(3, [0xB3, 7, 127]);
-    queueMidiEvent(4, [0xC4, (state.programs.pads ?? 89) & 0x7F]);
-    queueMidiEvent(4, [0xB4, 7, 127]);
+    queueMidiEvent(1, [0xC9, resolveUnitProgram('drums', state.programs.drums)], 0, null, stepTime);
+    queueMidiEvent(1, [0xB9, 7, 127], 0, null, stepTime);
+    queueMidiEvent(2, [0xC2, resolveUnitProgram('moog', state.programs.moog)], 0, null, stepTime);
+    queueMidiEvent(2, [0xB2, 7, 127], 0, null, stepTime);
+    queueMidiEvent(3, [0xC3, resolveUnitProgram('lead', state.programs.lead)], 0, null, stepTime);
+    queueMidiEvent(3, [0xB3, 7, 127], 0, null, stepTime);
+    queueMidiEvent(4, [0xC4, resolveUnitProgram('pads', state.programs.pads)], 0, null, stepTime);
+    queueMidiEvent(4, [0xB4, 7, 127], 0, null, stepTime);
   }
 
   uiStepQueue.push({ step: stepIdx, bar: state.currentBar, time: stepTime });
@@ -555,14 +644,14 @@ function scheduleStep(stepIdx, stepTime) {
         if (!state.units.drums.extOnly) {
           dsp.triggerDrum(d.key, stepTime, vel / 127, state.units.drums.params);
         }
-        queueMidiEvent(1, [0x99, d.midi, vel], Math.round(stepDurMs * 0.5), [0x89, d.midi, 0]);
+        queueMidiEvent(1, [0x99, d.midi, vel], Math.round(stepDurMs * 0.5), [0x89, d.midi, 0], stepTime);
         triggeredLabels.push(d.label);
       }
     }
     // Dramatic Bar-8 Beat-4 rimshot delay splash turnaround!
     if (barIn8 === 7 && stepIdx === 14) {
       if (!state.units.drums.extOnly) dsp.triggerDrum('snare', stepTime, 0.85, state.units.drums.params);
-      queueMidiEvent(1, [0x99, 37, 108], 90, [0x89, 37, 0]);
+      queueMidiEvent(1, [0x99, 37, 108], 90, [0x89, 37, 0], stepTime);
       triggeredLabels.push('TURNAROUND-RIM');
     }
     if (triggeredLabels.length > 0) {
@@ -604,9 +693,9 @@ function scheduleStep(stepIdx, stepTime) {
         );
       }
       if (bassCell.slide) {
-        queueMidiEvent(2, [0xB2, 5, 58]);
+        queueMidiEvent(2, [0xB2, 5, 58], 0, null, stepTime);
       }
-      queueMidiEvent(2, [0x92, note, vel], gateMs, [0x82, note, 0]);
+      queueMidiEvent(2, [0x92, note, vel], gateMs, [0x82, note, 0], stepTime);
       const flags = `${bassCell.accent ? ' ACC' : ''}${bassCell.slide ? ' GLD' : ''}`;
       state.units.moog.lastReadout = `CH3 • ${midiToNoteName(note)} V${vel}${flags}`;
     }
@@ -630,7 +719,7 @@ function scheduleStep(stepIdx, stepTime) {
       if (!state.units.lead.extOnly) {
         dsp.triggerProphetLead(note, stepTime + 0.018, stepDurSec * gateFactor, vel / 127, state.units.lead.params);
       }
-      queueMidiEvent(3, [0x93, note, vel], Math.round(stepDurMs * gateFactor), [0x83, note, 0]);
+      queueMidiEvent(3, [0x93, note, vel], Math.round(stepDurMs * gateFactor), [0x83, note, 0], stepTime + 0.018);
       state.units.lead.lastReadout = `CH4 • ${midiToNoteName(note)} DYAD V${vel}`;
     }
   }
@@ -656,13 +745,14 @@ function scheduleStep(stepIdx, stepTime) {
       if (!state.units.pads.extOnly) {
         dsp.triggerJunoPadChord(shiftedNotes, stepTime, 0.18, vel / 127, state.units.pads.params);
       }
-      // Percussive 165ms MIDI chord stab impulse into Arturia Jun-6 V / CS-80 V4!
+      // Percussive 165ms MIDI chord stab impulse into Unit 4 (Ch 5)!
       shiftedNotes.forEach((n) => {
-        queueMidiEvent(4, [0x94, n, vel], 165, [0x84, n, 0]);
+        queueMidiEvent(4, [0x94, n, vel], 165, [0x84, n, 0], stepTime);
       });
-      // Stream live section- & steering-aware filter CC74 straight into Arturia Jun-6 V!
+      // Stream live section- & steering-aware filter CC74 + CC43 on Ch 5 (0xB4)!
       const cutoffCc = Math.max(18, Math.min(112, Math.round(18 + (dsp.params.stabCutoffHz / 1900) * 92)));
-      queueMidiEvent(4, [0xB0, 74, cutoffCc]);
+      queueMidiEvent(4, [0xB4, 74, cutoffCc], 0, null, stepTime);
+      queueMidiEvent(4, [0xB4, 43, cutoffCc], 0, null, stepTime);
       state.units.pads.lastReadout = `CH5 • STAB [${shiftedNotes.map(midiToNoteName).join('-')}]`;
     }
   }
@@ -809,7 +899,8 @@ function completeSeamlessTrackArrival() {
   if (prefs.noiseMuted) {
     dsp.params.noiseBedLevel = 0.0;
     dsp.params.vinylCrackleDensity = 0.0;
-    [1, 2, 3, 4].forEach((portId) => queueMidiEvent(portId, [0xB0, 16, 0]));
+    const portCh = { 1: 9, 2: 2, 3: 3, 4: 4 };
+    [1, 2, 3, 4].forEach((portId) => queueMidiEvent(portId, [0xB0 | portCh[portId], 16, 0]));
   }
   if (prefs.darker) {
     dsp.params.baseStabCutoffHz = Math.max(240, (dsp.params.baseStabCutoffHz || 460) * 0.72);
@@ -871,10 +962,11 @@ async function generateFromPrompt(promptText, cartridge = null) {
     steerResult.applied.push(`Slowed BPM to ${state.bpm}`);
   }
 
-  // Immediately push any steered MIDI CCs (e.g. CC16=0 Noise Off, CC74 Cutoff, CC13 Delay FB) to Arturia!
+  // Immediately push any steered MIDI CCs (e.g. CC16=0 Noise Off, CC74 Cutoff, CC13 Delay FB) to each unit's MIDI channel!
+  const portChMap = { 1: 9, 2: 2, 3: 3, 4: 4 };
   for (const [ccNumStr, ccVal] of Object.entries(steerResult.ccs || {})) {
     const ccNum = parseInt(ccNumStr, 10);
-    [1, 2, 3, 4].forEach((portId) => queueMidiEvent(portId, [0xB0, ccNum, ccVal]));
+    [1, 2, 3, 4].forEach((portId) => queueMidiEvent(portId, [0xB0 | portChMap[portId], ccNum, ccVal]));
   }
 
   // If user typed a pure live mix/sound command (e.g. "remove the white noise") without picking a new genre cartridge,
@@ -934,9 +1026,12 @@ async function generateFromPrompt(promptText, cartridge = null) {
             const chMap = { drums: 9, moog: 2, lead: 3, pads: 4 };
             const portMap = { drums: 1, moog: 2, lead: 3, pads: 4 };
             for (const [uKey, prog] of Object.entries(data.llm.programs)) {
-              if (uKey in state.units && state.programs[uKey] !== prog && isUnitAudible(uKey)) {
-                state.programs[uKey] = prog;
-                queueMidiEvent(portMap[uKey] || 0, [0xC0 | (chMap[uKey] || 0), prog & 0x7F]);
+              if (uKey in state.units && isUnitAudible(uKey)) {
+                const resolvedProg = resolveUnitProgram(uKey, prog);
+                if (state.programs[uKey] !== resolvedProg) {
+                  state.programs[uKey] = resolvedProg;
+                  queueMidiEvent(portMap[uKey] || 0, [0xC0 | (chMap[uKey] || 0), resolvedProg & 0x7F]);
+                }
               }
             }
           }
@@ -998,9 +1093,12 @@ function applyArrangementToState(arr) {
     const chMap = { drums: 9, moog: 2, lead: 3, pads: 4 };
     const portMap = { drums: 1, moog: 2, lead: 3, pads: 4 };
     for (const [uKey, prog] of Object.entries(arr.programs)) {
-      if (uKey in state.units && state.programs[uKey] !== prog && isUnitAudible(uKey)) {
-        state.programs[uKey] = prog;
-        queueMidiEvent(portMap[uKey] || 0, [0xC0 | (chMap[uKey] || 0), prog & 0x7F]);
+      if (uKey in state.units && isUnitAudible(uKey)) {
+        const resolvedProg = resolveUnitProgram(uKey, prog);
+        if (state.programs[uKey] !== resolvedProg) {
+          state.programs[uKey] = resolvedProg;
+          queueMidiEvent(portMap[uKey] || 0, [0xC0 | (chMap[uKey] || 0), resolvedProg & 0x7F]);
+        }
       }
     }
   }
@@ -1652,12 +1750,15 @@ function bindConcept02Modules() {
     stopSequencer();
   });
 
-  // 5. Studio Mode Switcher: Arturia Digital vs. Physical Pis
-  document.getElementById('btn-mode-arturia')?.addEventListener('click', () => {
-    setStudioMode('arturia');
-  });
+  // 5. Studio Mode Switcher: USB Hardware Only vs. USB + Mac DSP vs. Arturia Digital
   document.getElementById('btn-mode-hardware')?.addEventListener('click', () => {
     setStudioMode('hardware');
+  });
+  document.getElementById('btn-mode-mac-dsp')?.addEventListener('click', () => {
+    setStudioMode('mac_dsp');
+  });
+  document.getElementById('btn-mode-arturia')?.addEventListener('click', () => {
+    setStudioMode('arturia');
   });
 
   // 6. Launch All Arturia Synths Master Buttons
@@ -1699,27 +1800,43 @@ function bindConcept02Modules() {
   });
 }
 
+function syncMacAudioUiState() {
+  const allExtOnly = Object.values(state.units).every((u) => u.extOnly);
+  dsp.setLocalMonitorMuted(allExtOnly);
+  const muteBtn = document.getElementById('btn-mute-mac-dsp');
+  if (muteBtn) {
+    muteBtn.textContent = allExtOnly ? 'MAC AUDIO: MUTED (USB ONLY)' : 'MAC AUDIO: ON';
+  }
+  for (const uKey of ['drums', 'moog', 'lead', 'pads']) {
+    const btn = document.querySelector(`[data-unit-ext="${uKey}"]`);
+    if (btn) {
+      btn.classList.toggle('ext-active', state.units[uKey].extOnly);
+      btn.textContent = state.units[uKey].extOnly ? 'MIDI ONLY' : 'DSP+MIDI';
+    }
+  }
+}
+
 function setStudioMode(mode) {
   state.studioMode = mode;
   const isArturia = mode === 'arturia';
+  const isHardwareOnly = mode === 'hardware';
+  const isMacDsp = mode === 'mac_dsp';
 
-  const btnArturia = document.getElementById('btn-mode-arturia');
-  const btnHardware = document.getElementById('btn-mode-hardware');
-  if (btnArturia) btnArturia.classList.toggle('active', isArturia);
-  if (btnHardware) btnHardware.classList.toggle('active', !isArturia);
+  document.getElementById('btn-mode-hardware')?.classList.toggle('active', isHardwareOnly);
+  document.getElementById('btn-mode-mac-dsp')?.classList.toggle('active', isMacDsp);
+  document.getElementById('btn-mode-arturia')?.classList.toggle('active', isArturia);
 
   const btnLaunchAll = document.getElementById('btn-launch-arturia-all');
   if (btnLaunchAll) btnLaunchAll.style.display = isArturia ? 'inline-flex' : 'none';
+  const btnGuide = document.getElementById('btn-open-guide-modal');
+  if (btnGuide) btnGuide.style.display = isArturia ? 'inline-flex' : 'none';
 
   if (isArturia) {
-    // Switch to genuine Arturia V Collection factory CC maps
     state.units.drums.profile = 'arturia_emulator_cmi';
     state.units.moog.profile = 'arturia_mini_v4';
     state.units.lead.profile = 'arturia_dx7_prophet';
     state.units.pads.profile = 'arturia_juno_cs80';
 
-    // Mute internal WebAudio DSP on Bass, Lead, Pads so ONLY open Arturia synths play audio;
-    // Keep built-in 48kHz 808/909 Drums active on Mac!
     state.units.moog.extOnly = false;
     state.units.lead.extOnly = false;
     state.units.pads.extOnly = false;
@@ -1730,7 +1847,7 @@ function setStudioMode(mode) {
 
     addLog(
       'MIDI',
-      '🎹 ARTURIA V COLLECTION 11 DIGITAL MODE: Auto-configured standalone.pref per unit (Mini V4, DX7 V / MS-20 V, Jun-6 V / CS-80 V4) + Built-In 808/909 Drums.'
+      '🎹 ARTURIA DIGITAL MODE: Routing to Arturia V Collection virtual ports + internal 48kHz Drums.'
     );
   } else {
     state.units.drums.profile = 'sp404';
@@ -1738,25 +1855,31 @@ function setStudioMode(mode) {
     state.units.lead.profile = 'prophet_6';
     state.units.pads.profile = 'korg_minilogue';
 
-    state.units.moog.extOnly = false;
-    state.units.lead.extOnly = false;
-    state.units.pads.extOnly = false;
-    state.units.drums.extOnly = false;
+    const extOnly = isHardwareOnly;
+    state.units.drums.extOnly = extOnly;
+    state.units.moog.extOnly = extOnly;
+    state.units.lead.extOnly = extOnly;
+    state.units.pads.extOnly = extOnly;
+
+    // Ensure GM/Hardware synth programs are active (not 0 = Grand Piano)
+    state.programs.drums = resolveUnitProgram('drums', state.programs.drums);
+    state.programs.moog = resolveUnitProgram('moog', state.programs.moog);
+    state.programs.lead = resolveUnitProgram('lead', state.programs.lead);
+    state.programs.pads = resolveUnitProgram('pads', state.programs.pads);
 
     document.querySelectorAll('.arturia-slot-controls').forEach((el) => (el.style.display = 'none'));
     document.querySelectorAll('.hw-slot-subtitle').forEach((el) => (el.style.display = 'inline'));
 
-    addLog('MIDI', '🔌 PHYSICAL 4-PI RIG MODE: Routing strictly 1-to-1 to the 4 Raspberry Pi Zero 2 Ws over USB.');
+    addLog(
+      'MIDI',
+      isHardwareOnly
+        ? '🔌 USB HARDWARE MIDI MODE: Mac soft-synths & noise floor muted — streaming strictly over USB to connected Pis/hardware.'
+        : '🔊 USB + MAC DSP MODE: Streaming MIDI over USB while also monitoring internal Mac WebAudio DSP.'
+    );
   }
 
   renderAllKnobs();
-  for (const uKey of ['drums', 'moog', 'lead', 'pads']) {
-    const btn = document.querySelector(`[data-unit-ext="${uKey}"]`);
-    if (btn) {
-      btn.classList.toggle('ext-active', state.units[uKey].extOnly);
-      btn.textContent = state.units[uKey].extOnly ? 'MIDI ONLY' : 'DSP+MIDI';
-    }
-  }
+  syncMacAudioUiState();
 }
 
 async function launchAllArturia() {
@@ -2047,24 +2170,14 @@ function bindTopAndUnitControls() {
     btn.addEventListener('click', () => {
       const u = btn.getAttribute('data-unit-ext');
       state.units[u].extOnly = !state.units[u].extOnly;
-      btn.classList.toggle('ext-active', state.units[u].extOnly);
-      btn.textContent = state.units[u].extOnly ? 'MIDI ONLY' : 'DSP+MIDI';
-      addLog('MIDI', `Unit [${u.toUpperCase()}] switched to ${state.units[u].extOnly ? 'External MIDI Only (Internal DSP Muted for Ableton/Arturia/Hardware)' : 'Internal Analog DSP + External MIDI Out'}.`);
+      syncMacAudioUiState();
+      addLog('MIDI', `Unit [${u.toUpperCase()}] switched to ${state.units[u].extOnly ? 'External USB MIDI Only (Mac DSP Muted)' : 'Internal Mac DSP + External USB MIDI Out'}.`);
     });
   });
-  document.getElementById('btn-mute-mac-dsp')?.addEventListener('click', (e) => {
+  document.getElementById('btn-mute-mac-dsp')?.addEventListener('click', () => {
     const allMuted = Object.values(state.units).every((u) => u.extOnly);
     const nextExt = !allMuted;
-    for (const uKey of ['drums', 'moog', 'lead', 'pads']) {
-      state.units[uKey].extOnly = nextExt;
-      const btn = document.querySelector(`[data-unit-ext="${uKey}"]`);
-      if (btn) {
-        btn.classList.toggle('ext-active', nextExt);
-        btn.textContent = nextExt ? 'MIDI ONLY' : 'DSP+MIDI';
-      }
-    }
-    e.currentTarget.textContent = nextExt ? 'MAC AUDIO: MUTED (PI ONLY)' : 'MAC AUDIO: ON';
-    addLog('MIDI', nextExt ? 'Muted Mac internal WebAudio DSP — now listening exclusively to the 4 physical Raspberry Pis.' : 'Re-enabled Mac internal WebAudio DSP alongside the 4 Raspberry Pis.');
+    setStudioMode(nextExt ? 'hardware' : 'mac_dsp');
   });
 
   document.getElementById('btn-moog-wave')?.addEventListener('click', (e) => {
@@ -2257,9 +2370,10 @@ window.addEventListener('DOMContentLoaded', () => {
     initiateSeamlessTrackTransition();
     if (!state.isPlaying) startSequencer();
   });
-  setStudioMode('arturia');
+  setStudioMode('hardware');
   initWebMIDI();
   fetchCoreMidiStatus();
+  setInterval(fetchCoreMidiStatus, 3000);
   startVisualLoop();
-  addLog('AI', 'SINTHWAVE // AETHER-909 Dieter Rams / Braun 1968 Atelier Edition ready.');
+  addLog('MIDI', 'SINTHWAVE // USB Hardware MIDI mode active (Mac internal soft-synths muted; routing live to connected USB devices).');
 });

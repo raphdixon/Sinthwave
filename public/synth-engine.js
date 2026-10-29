@@ -602,7 +602,19 @@ export class AnalogStudioDSP {
       padCutoff: 520,
     };
     this.trackMuted = [false, false, false, false];
+    this.localMonitorMuted = true;
     this.stepCounter = 0;
+  }
+
+  setLocalMonitorMuted(muted) {
+    this.localMonitorMuted = Boolean(muted);
+    if (this.ctx && this.nodes) {
+      const t = this.ctx.currentTime;
+      this.nodes.masterGain.gain.cancelScheduledValues(t);
+      this.nodes.masterGain.gain.setTargetAtTime(this.localMonitorMuted ? 0.0 : this.params.masterVolume, t, 0.015);
+      this.nodes.textureGain.gain.cancelScheduledValues(t);
+      this.nodes.textureGain.gain.setTargetAtTime(this.localMonitorMuted ? 0.0 : this.params.noiseBedLevel, t, 0.015);
+    }
   }
 
   init() {
@@ -799,9 +811,9 @@ export class AnalogStudioDSP {
     this.nodes.delayR.delayTime.setTargetAtTime(this.params.delayTimeSec * 0.752, t, 0.05);
     this.nodes.delayWet.gain.setTargetAtTime(Math.min(0.36, this.params.delayMix), t, 0.04);
     this.nodes.reverbWet.gain.setTargetAtTime(Math.min(0.46, this.params.reverbWet), t, 0.04);
-    this.nodes.textureGain.gain.setTargetAtTime(this.params.noiseBedLevel, t, 0.05);
+    this.nodes.textureGain.gain.setTargetAtTime(this.localMonitorMuted ? 0.0 : this.params.noiseBedLevel, t, 0.05);
     this.nodes.masterHighCut.frequency.setTargetAtTime(this.params.masterCutoff, t, 0.04);
-    this.nodes.masterGain.gain.setTargetAtTime(this.params.masterVolume, t, 0.04);
+    this.nodes.masterGain.gain.setTargetAtTime(this.localMonitorMuted ? 0.0 : this.params.masterVolume, t, 0.04);
   }
 
   get currentTime() {
